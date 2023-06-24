@@ -67,7 +67,11 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
       return formatISBN(identifier);
     }
 
-    console.log('METADATA: ', metadata)
+    const title = metadata['dc:title']
+    const author = metadata['dc:creator']
+    const publisher = metadata['dc:publisher']
+
+    const isbn = await fetchGoogleBookISBN(title,author,publisher)
 
     return null;
   } catch (err) {
@@ -100,26 +104,37 @@ export const  fetchISBNFromText = async (text: string): Promise<string> => {
   }
 }
 
-export const  fetchGoogleBookISBNByTitleAndAuthor = async (title: string, author: string) => {
-  const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
-  const url = `https://www.googleapis.com/books/v1/volumes?q=intitle:${title}+inauthor:${author}&key=${apiKey}`;
+async function fetchGoogleBookISBN(title: string, author: string, publisher?: string): Promise<string | undefined> {
+  let query = `https://www.googleapis.com/books/v1/volumes?q=intitle:${title}+inauthor:${author}`;
 
-  const response = await axios.get(url);
-  const data = response.data;
-
-  if (data.items) {
-    const book = data.items[0]; // take the first book
-    const identifiers = book.volumeInfo.industryIdentifiers;
-    return identifiers.find(id => {
-      if (id.type === 'ISBN_13') {
-        return id.identifier
-      } else if (id.type === 'ISBN_10') {
-        return id.identifier
-      }
-    });
+  if (publisher) {
+    query += `+inpublisher:${publisher}`;
   }
 
-  throw new Error(`No ISBN found for ${title} by ${author}`);
+  try {
+    const response = await axios.get(query);
+    if (response.data.items) {
+      const book = response.data.items[0]; // take the first book
+      const identifiers = book.volumeInfo.industryIdentifiers;
+      
+      for (const id of identifiers) {
+        if (id.type === 'ISBN_13') {
+          return id.identifier;
+        }
+      }
+
+      // If no ISBN-13, return ISBN-10
+      for (const id of identifiers) {
+        if (id.type === 'ISBN_10') {
+          return id.identifier;
+        }
+      }
+    }
+    return undefined;
+  } catch (error) {
+    console.error(error);
+    return undefined;
+  }
 }
 
 export const  fetchGoogleBooksMetadata = async (isbn: string) => {
