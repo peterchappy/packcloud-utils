@@ -8,7 +8,7 @@ export const isDirectory = (filePath: string) => {
         reject(error)
       }
 
-      resolve(() => !stats.isFile())
+      resolve(() => stats.isDirectory())
     });
   })
 
