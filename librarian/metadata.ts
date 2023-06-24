@@ -3,6 +3,10 @@ import * as path from 'path';
 import * as Tesseract from 'tesseract.js';
 import * as fs from 'fs'
 import { getFolderToRunIn } from './utils';
+import * as AdmZip from 'adm-zip';
+import { XMLParser } from 'fast-xml-parser';
+
+const parser = new XMLParser();
 
 export async function retrieveISBN(filePath: string): Promise<string> {
   try {
@@ -11,6 +15,37 @@ export async function retrieveISBN(filePath: string): Promise<string> {
     return isbn;
   } catch (error) {
     throw new Error(`Error retrieving ISBN for ${filePath}: ${error.message}`);
+  }
+}
+
+async function getIsbnFromEpub(filepath: string): Promise<string | null> {
+  try {
+    const zip = new AdmZip(filepath);
+    const opfEntry = zip.getEntries().find(entry => entry.entryName.endsWith('.opf'));
+    if (!opfEntry) {
+      return null;
+    }
+
+    const opfContent = opfEntry.getData().toString('utf8');
+    const opfObj = parser.parse(opfContent);
+
+    const metadata = opfObj.package.metadata;
+    if (!metadata) {
+      return null;
+    }
+
+    const identifier = Array.isArray(metadata['dc:identifier'])
+      ? metadata['dc:identifier'].find((id: any) => id.scheme === 'ISBN')
+      : metadata['dc:identifier'];
+
+    if (identifier && identifier.scheme === 'ISBN') {
+      return identifier['#text'];
+    }
+
+    return null;
+  } catch (err) {
+    console.error(err);
+    return null;
   }
 }
 
@@ -57,7 +92,7 @@ export const  fetchGoogleBooksMetadata = async (isbn: string) => {
 export const retrieveAndProcessMetadata = async (filePath: string) => {
   try {
     
-    const isbn = await retrieveISBN(filePath);
+    const isbn = await getIsbnFromEpub(filePath);
     console.log('Metadata: ISBN = ', isbn);
     const metadata = await fetchGoogleBooksMetadata(isbn);
 
