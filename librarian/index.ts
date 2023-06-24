@@ -1,18 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import axios from 'axios';
-import * as Tesseract from 'tesseract.js';
 import { AUDIOBOOK_EXTENSIONS, COMIC_BOOK_EXTENSIONS, EBOOK_EXTENSIONS } from './constants';
+import { getFolderToRunIn } from './utils';
 
 require('dotenv').config();
 
 const audiobooksFolder = process.env.AUDIOBOOKS_FOLDER;
 const comicbooksFolder = process.env.COMICBOOKS_FOLDER;
 const booksFolder = process.env.BOOKS_FOLDER;
-
-const rootFolder = process.argv[2];
-
-console.log(`ROOT FOLDER: ${rootFolder}`)
 
 export async function moveFileToFolder(filePath: string, folderPath: string) {
   const normalizedFilePath = filePath.replace(/\s/g, "_");
@@ -31,77 +26,6 @@ export async function moveFileToFolder(filePath: string, folderPath: string) {
   });
 }
 
-export async function retrieveISBN(filePath: string): Promise<string> {
-  try {
-    const extractedText = await performOCR(filePath);
-    const isbn = await fetchISBNFromText(extractedText);
-    return isbn;
-  } catch (error) {
-    throw new Error(`Error retrieving ISBN for ${filePath}: ${error.message}`);
-  }
-}
-
-export async function performOCR(filePath: string): Promise<string> {
-  const imageBuffer = fs.readFileSync(filePath);
-
-  const { data } = await Tesseract.recognize(imageBuffer, 'eng');
-  const extractedText = data.text.trim();
-
-  return extractedText;
-}
-
-export const  fetchISBNFromText = async (text: string): Promise<string> => {
-  // Implement your logic to find and extract the ISBN from the extracted text
-  // You can use regular expressions or other techniques to identify and retrieve the ISBN
-
-  // Example regular expression to extract ISBN-10 or ISBN-13:
-  const isbnRegex = /(?:ISBN(?:-10)?:? |ISBN(?:-13)?:?\r?\n?)((?=[0-9X]{10}$|(?=(?:[0-9]+[-\ ]){3})[-\ 0-9X]{13}$|97[89][0-9]{10}$|(?=(?:[0-9]+[-\ ]){4})[-\ 0-9]{17}$)[0-9]{1,5}[-\ 0-9X]{10,13}[-\ 0-9]{0,5})/i;
-  const match = text.match(isbnRegex);
-  
-  if (match) {
-    return match[1].replace(/-/g, ''); // Remove any dashes from the ISBN
-  } else {
-    throw new Error('ISBN not found');
-  }
-}
-
-export const  fetchGoogleBooksMetadata = async (isbn: string) => {
-  const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
-  const url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${apiKey}`;
-
-  const response = await axios.get(url);
-  const data = response.data;
-
-  if (data && data.items && data.items.length > 0) {
-    const book = data.items[0];
-    const { title, authors, description } = book.volumeInfo;
-    return { title, authors, description };
-  }
-
-  throw new Error(`No metadata found for ISBN ${isbn}`);
-}
-
-export const retrieveAndProcessMetadata = async (filePath: string) => {
-  try {
-    const isbn = await retrieveISBN(filePath);
-    const metadata = await fetchGoogleBooksMetadata(isbn);
-
-    // Process the retrieved metadata
-    console.log('Metadata:', metadata);
-
-    // Write the metadata to a file
-    const metadataFilePath = `${filePath}.metadata.json`;
-    fs.writeFile(metadataFilePath, JSON.stringify(metadata), (error) => {
-      if (error) {
-        console.error(`Error writing metadata for ${filePath}:`, error);
-      } else {
-        console.log(`Metadata for ${filePath} has been written to ${metadataFilePath}`);
-      }
-    });
-  } catch (error) {
-    console.error(`Error retrieving metadata for ${filePath}:`, error);
-  }
-}
 
 export const processFile = async (filePath: string) => {
   const fileExtension = path.extname(filePath).toLowerCase();
@@ -178,6 +102,8 @@ export const processFolder = (folderPath: string, isRoot = false) => {
     });
   });
 }
+
+const rootFolder = getFolderToRunIn()
 
 if (rootFolder) {
   processFolder(rootFolder, true);
