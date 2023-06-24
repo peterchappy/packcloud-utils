@@ -16,7 +16,7 @@ const padWithZeroes = (number: number, digits: number): string => {
 export const formatISBN = (isbn: number | string): string => typeof isbn === 'string'
     ? isbn.replace(/-/g, '')
     : String(isbn).length < 10
-      ? padWithZeroes(isbn, String(isbn).length - 10)
+      ? padWithZeroes(isbn, String(isbn).length + 1 - 10)
       : String(isbn);
 
 export const isISBN = (isbn: string): boolean => {
@@ -60,7 +60,7 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
       : metadata['dc:Identifier'];
 
     if (identifier) {
-      return identifier;
+      return formatISBN(identifier);
     } else {
       console.log('METADATA: ', metadata)
     }
