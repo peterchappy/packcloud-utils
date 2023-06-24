@@ -22,6 +22,8 @@ export async function moveFileToFolder(filePath: string, folderPath: string) {
   });
 }
 
+
+
 export async function retrieveISBN(filePath: string): Promise<string> {
   try {
     const extractedText = await performOCR(filePath);
@@ -176,6 +178,7 @@ export const processFolder = (folderPath: string) => {
 
 const rootFolder = process.argv[2];
 
+console.log(`ROOT FOLDER: ${rootFolder}`)
 if (rootFolder) {
   processFolder(rootFolder);
 } else {
