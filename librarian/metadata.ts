@@ -157,18 +157,8 @@ export const  fetchGoogleBooksMetadata = async (isbn: string) => {
   throw new Error(`No metadata found for ISBN ${isbn}`);
 }
 
-export const retrieveAndProcessMetadata = async (filePath: string) => {
+export const retrieveAndProcessMetadata = async (isbn: string) => {
   try {
-    
-    const isbn = await getIsbnFromEpub(filePath);
-    if (!isbn) {
-      console.log('Metadata: MISSING ISBN ', filePath);
-      return
-    }
-    
-    // TIMEOUT TO NOT GET RATE LIMITED
-    await new Promise(resolve => setTimeout(resolve, 100));
-
     const metadata = await fetchGoogleBooksMetadata(isbn);
 
     // Process the retrieved metadata
@@ -184,7 +174,7 @@ export const retrieveAndProcessMetadata = async (filePath: string) => {
     //   }
     // });
   } catch (error) {
-    console.error(`Error retrieving metadata for ${filePath}:`, error?.data?.error);
+    console.error(`Error retrieving metadata for ${isbn}:`, error?.data?.error);
   }
 }
 
@@ -204,7 +194,7 @@ async function extractISBNFromPDF(filePath: string): Promise<string | undefined>
 }
 
 function cleanISBN(isbn: string): string {
-  return isbn.replace(/-/g, '');
+  return isbn.replace(/-/g, '').replace("ISBN:", "");
 }
 
 export const processFolder = (folderPath: string) => {
@@ -217,22 +207,32 @@ export const processFolder = (folderPath: string) => {
     for (const file of files) {
       const filePath = path.join(folderPath, file);
       try {
-        if (isPDF(filePath)) {
-          const isbn = await extractISBNFromPDF(filePath)
-          console.log('ISBN:', isbn)
-        }
-  
-        continue;
-  
-        if (isEpub(filePath)) {
-          await retrieveAndProcessMetadata(filePath)
-        } 
-
         const directory = await isDirectory(filePath);
   
         if (directory) {
           processFolder(filePath)
         }
+
+        let isbn = undefined;
+
+        if (isPDF(filePath)) {
+          isbn = await extractISBNFromPDF(filePath)
+        }
+  
+  
+        if (isEpub(filePath)) {
+          isbn = await getIsbnFromEpub(filePath);
+        } 
+
+        if (isbn) {
+          console.log("ISBN FOUND ", isbn)
+          // TIMEOUT TO NOT GET RATE LIMITED
+          await new Promise(resolve => setTimeout(resolve, 100));
+          retrieveAndProcessMetadata(isbn)
+        } else {
+          console.log(`DEBUG: ISBN NOT FOUND for ${filePath}`)
+        }
+
 
       } catch (e) {
         console.log('ERROR: UNABEL TO HANDLE', filePath)
