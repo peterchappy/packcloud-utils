@@ -32,7 +32,7 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
     const opfPackage = opfObj['opf:package'] || opfObj.package || {}
     const metadata = opfPackage['opf:metadata'] || opfPackage.metadata;
     if (!metadata) {
-      console.log('METADATA: ', opfObj)
+      console.log('METADATA: ', metadata)
       return null;
     }
 
