@@ -9,15 +9,13 @@ import { isDirectory } from './files';
 
 const parser = new XMLParser();
 
-const padWithZeroes = (number: number, digits: number): string => {
-  return number.toString().padStart(digits, '0');
-}
+const ISBN_10_LENGTH = 10
 
 export const formatISBN = (isbn: number | string): string => typeof isbn === 'string'
     ? isbn.replace(/-/g, '')
-    : String(isbn).length < 10
-      ? padWithZeroes(isbn, String(isbn).length + 1 - 10)
-      : String(isbn);
+    : String(isbn).length < ISBN_10_LENGTH
+      ? isbn.toString().padStart(ISBN_10_LENGTH, '0')
+      : String(isbn)
 
 export const isISBN = (isbn: string): boolean => {
   console.log('TESTING ISBN: ', isbn)
