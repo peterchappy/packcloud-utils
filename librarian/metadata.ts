@@ -124,7 +124,7 @@ export const retrieveAndProcessMetadata = async (filePath: string) => {
     }
     
     // TIMEOUT TO NOT GET RATE LIMITED
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     const metadata = await fetchGoogleBooksMetadata(isbn);
 
@@ -146,13 +146,13 @@ export const retrieveAndProcessMetadata = async (filePath: string) => {
 }
 
 export const processFolder = (folderPath: string) => {
-  fs.readdir(folderPath, (error, files) => {
+  fs.readdir(folderPath, async (error, files) => {
     if (error) {
       console.error(`Error reading folder ${folderPath}: ${error.message}`);
       return;
     }
 
-    files.forEach(async (file) => {
+    for (const file of files) {
       const filePath = path.join(folderPath, file);
       const directory = await isDirectory(filePath);
 
@@ -164,7 +164,7 @@ export const processFolder = (folderPath: string) => {
         await retrieveAndProcessMetadata(filePath)
       }
 
-    });
+    }
   });
 }
 
