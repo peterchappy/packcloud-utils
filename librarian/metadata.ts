@@ -58,7 +58,7 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
       ? metadata['dc:identifier']
         : metadata['dc:Identifier']
           ? metadata['dc:Identifier']
-          : metadata['dc-metadata']['dc:identifier'];
+          : metadata['dc-metadata']['dc:Identifier'];
     
 
     if (identifier) {
