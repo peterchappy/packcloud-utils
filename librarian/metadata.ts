@@ -118,24 +118,25 @@ export const retrieveAndProcessMetadata = async (filePath: string) => {
   try {
     
     const isbn = await getIsbnFromEpub(filePath);
-    if (isbn) {
-      console.log('Metadata: ISBN = ', isbn);
+    if (!isbn) {
+      console.log('Metadata: MISSING ISBN ', filePath);
+      return
     }
-    return;
+
     const metadata = await fetchGoogleBooksMetadata(isbn);
 
     // Process the retrieved metadata
     console.log('Metadata:', metadata);
 
     // Write the metadata to a file
-    const metadataFilePath = `${filePath}.metadata.json`;
-    fs.writeFile(metadataFilePath, JSON.stringify(metadata), (error) => {
-      if (error) {
-        console.error(`Error writing metadata for ${filePath}:`, error);
-      } else {
-        console.log(`Metadata for ${filePath} has been written to ${metadataFilePath}`);
-      }
-    });
+    // const metadataFilePath = `${filePath}.metadata.json`;
+    // fs.writeFile(metadataFilePath, JSON.stringify(metadata), (error) => {
+    //   if (error) {
+    //     console.error(`Error writing metadata for ${filePath}:`, error);
+    //   } else {
+    //     console.log(`Metadata for ${filePath} has been written to ${metadataFilePath}`);
+    //   }
+    // });
   } catch (error) {
     console.error(`Error retrieving metadata for ${filePath}:`, error);
   }
