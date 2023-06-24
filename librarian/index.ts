@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import axios from 'axios';
 import * as Tesseract from 'tesseract.js';
-import { AUDIOBOOK_EXTENSIONS, EBOOK_EXTENSIONS } from './constants';
+import { AUDIOBOOK_EXTENSIONS, COMIC_BOOK_EXTENSIONS, EBOOK_EXTENSIONS } from './constants';
 
 require('dotenv').config();
 
@@ -112,7 +112,7 @@ export const processFile = async (filePath: string) => {
     } else {
       console.log(`No audiobooks folder configured in the .env file. Skipping ${filePath}`);
     }
-  } else if (['.cbz', '.cbr'].includes(fileExtension)) {
+  } else if (COMIC_BOOK_EXTENSIONS.includes(fileExtension)) {
     if (comicbooksFolder) {
       await moveFileToFolder(filePath, comicbooksFolder);
     } else {
