@@ -10,19 +10,21 @@ const comicbooksFolder = process.env.COMICBOOKS_FOLDER;
 const booksFolder = process.env.BOOKS_FOLDER;
 
 export async function moveFileToFolder(filePath: string, folderPath: string) {
-  const fileBasename = path.basename(filePath);
+  const normalizedFilePath = filePath.replace(/\s/g, "_");
+  const fileBasename = path.basename(normalizedFilePath);
   const newFilePath = path.join(folderPath, fileBasename);
 
   fs.rename(filePath, newFilePath, (error) => {
     if (error) {
       console.error(`Error moving file ${filePath}: ${error.message}`);
     } else {
-      console.log(`Moved ${filePath} to ${newFilePath}`);
+      console.log(`Moved ${filePath}`);
+      console.log(`to`);
+      console.log(`${newFilePath}`);
+      console.log(`-----------------------`);
     }
   });
 }
-
-
 
 export async function retrieveISBN(filePath: string): Promise<string> {
   try {
@@ -114,21 +116,11 @@ export const processFile = async (filePath: string) => {
   } else if (['.mobi', '.epub', ".pdf"].includes(fileExtension)) {
     if (booksFolder) {
       await moveFileToFolder(filePath, booksFolder);
-      await retrieveAndProcessMetadata(`${filePath}.metadata.json`);
     } else {
       console.log(`No books folder configured in the .env file. Skipping ${filePath}`);
     }
   } else {
-    const readline = require('readline').createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-
-    readline.question(`Where would you like to move ${filePath}? `, async (answer) => {
-      readline.close();
-
-      await moveFileToFolder(filePath, answer);
-    });
+    console.log(`No matching sort for ${filePath}`);
   }
 }
 
@@ -151,13 +143,15 @@ export const processFolder = (folderPath: string) => {
 
 
     if (containsAudiobook && audiobooksFolder) {
-        fs.rename(folderPath, path.join(audiobooksFolder, path.basename(folderPath)), (error) => {
-          if (error) {
-            console.error(`Error moving folder ${folderPath}: ${error.message}`);
-          } else {
-            console.log(`Moved ${folderPath} to ${path.join(audiobooksFolder, path.basename(folderPath))}`);
-          }
-        });
+      fs.rename(folderPath, path.join(audiobooksFolder, path.basename(folderPath)), (error) => {
+        if (error) {
+          console.error(`Error moving folder ${folderPath}: ${error.message}`);
+        } else {
+          console.log(`Moved ${folderPath} to ${path.join(audiobooksFolder, path.basename(folderPath))}`);
+        }
+      });
+      
+      return
     }
 
     files.forEach(async (file) => {
