@@ -9,6 +9,13 @@ import { isDirectory } from './files';
 
 const parser = new XMLParser();
 
+export const isISBN = (isbn: string): boolean => {
+  const isbn10Regex = /^(?:[0-9]{9}X|[0-9]{10})$/; // ISBN-10 should be 9 digits followed by an X or 10 digits
+  const isbn13Regex = /^(?:97[89][0-9]{10})$/; // ISBN-13 should start with 978 or 979 followed by 10 digits
+
+  return isbn10Regex.test(isbn) || isbn13Regex.test(isbn);
+}
+
 export async function retrieveISBN(filePath: string): Promise<string> {
   try {
     const extractedText = await performOCR(filePath);
@@ -37,7 +44,7 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
     }
 
     const identifier = Array.isArray(metadata['dc:identifier'])
-      ? metadata['dc:identifier'].find((id: any) => id.scheme === 'ISBN')
+      ? metadata['dc:identifier'].find(isISBN)
       : metadata['dc:identifier'];
 
     if (identifier && identifier.scheme === 'ISBN') {
