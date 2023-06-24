@@ -94,6 +94,7 @@ export const retrieveAndProcessMetadata = async (filePath: string) => {
     
     const isbn = await getIsbnFromEpub(filePath);
     console.log('Metadata: ISBN = ', isbn);
+    return;
     const metadata = await fetchGoogleBooksMetadata(isbn);
 
     // Process the retrieved metadata
