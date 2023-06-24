@@ -10,6 +10,10 @@ const audiobooksFolder = process.env.AUDIOBOOKS_FOLDER;
 const comicbooksFolder = process.env.COMICBOOKS_FOLDER;
 const booksFolder = process.env.BOOKS_FOLDER;
 
+const rootFolder = process.argv[2];
+
+console.log(`ROOT FOLDER: ${rootFolder}`)
+
 export async function moveFileToFolder(filePath: string, folderPath: string) {
   const normalizedFilePath = filePath.replace(/\s/g, "_");
   const fileBasename = path.basename(normalizedFilePath);
@@ -125,7 +129,7 @@ export const processFile = async (filePath: string) => {
   }
 }
 
-export const processFolder = (folderPath: string) => {
+export const processFolder = (folderPath: string, isRoot = false) => {
   fs.readdir(folderPath, (error, files) => {
     if (error) {
       console.error(`Error reading folder ${folderPath}: ${error.message}`);
@@ -143,7 +147,7 @@ export const processFolder = (folderPath: string) => {
     });
 
 
-    if (containsAudiobook && audiobooksFolder) {
+    if (containsAudiobook && audiobooksFolder && !isRoot) {
       fs.rename(folderPath, path.join(audiobooksFolder, path.basename(folderPath)), (error) => {
         if (error) {
           console.error(`Error moving folder ${folderPath}: ${error.message}`);
@@ -175,11 +179,8 @@ export const processFolder = (folderPath: string) => {
   });
 }
 
-const rootFolder = process.argv[2];
-
-console.log(`ROOT FOLDER: ${rootFolder}`)
 if (rootFolder) {
-  processFolder(rootFolder);
+  processFolder(rootFolder, true);
 } else {
   console.error('Please provide a root folder as a command line argument.');
 }
