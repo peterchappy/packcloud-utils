@@ -126,12 +126,12 @@ export const processFolder = (folderPath: string) => {
 
     files.forEach(async (file) => {
       const filePath = path.join(folderPath, file);
-      const directory = isDirectory(filePath);
+      const directory = await isDirectory(filePath);
 
       if (directory) {
         return
       }
-      
+
       await retrieveAndProcessMetadata(filePath)
     });
   });
