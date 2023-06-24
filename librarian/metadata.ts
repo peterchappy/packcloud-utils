@@ -7,6 +7,8 @@ import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
 import { isDirectory } from './files';
 
+require('dotenv').config()
+
 const parser = new XMLParser();
 
 const ISBN_10_LENGTH = 10
@@ -63,8 +65,6 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
 
     if (identifier) {
       return formatISBN(identifier);
-    } else {
-      console.log('METADATA: ', metadata)
     }
 
     return null;
