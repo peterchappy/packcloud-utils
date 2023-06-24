@@ -18,7 +18,6 @@ export const formatISBN = (isbn: number | string): string => typeof isbn === 'st
       : String(isbn)
 
 export const isISBN = (isbn: string): boolean => {
-  console.log('TESTING ISBN: ', isbn)
   const isbn10Regex = /^(?:[0-9]{9}X|[0-9]{10})$/; // ISBN-10 should be 9 digits followed by an X or 10 digits
   const isbn13Regex = /^(?:97[89][0-9]{10})$/; // ISBN-13 should start with 978 or 979 followed by 10 digits
   const iValidISBN = isbn10Regex.test(isbn) || isbn13Regex.test(isbn);
@@ -52,7 +51,8 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
       return null;
     }
 
-    const identifierProperty = metadata['dc:identifier']['dc-metadata'] || metadata['dc:identifier']
+    let identifierProperty = metadata['dc:identifier'];
+    identifierProperty = identifierProperty['dc-metadata'] ?? identifierProperty
 
     const identifier = Array.isArray(identifierProperty['dc:identifier'])
       ? identifierProperty['dc:identifier'].find(x => isISBN(formatISBN(x)))
