@@ -225,7 +225,8 @@ export const processFolder = (folderPath: string) => {
         } 
 
         if (isbn) {
-          console.log("ISBN FOUND ", isbn)
+          console.log(`ISBN FOUND FOR ${filePath}`)
+          console.log(`ISBN =`, isbn)
           // TIMEOUT TO NOT GET RATE LIMITED
           await new Promise(resolve => setTimeout(resolve, 100));
           retrieveAndProcessMetadata(isbn)
