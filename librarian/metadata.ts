@@ -216,23 +216,28 @@ export const processFolder = (folderPath: string) => {
 
     for (const file of files) {
       const filePath = path.join(folderPath, file);
-      const directory = await isDirectory(filePath);
-
-      if (directory) {
-        processFolder(filePath)
+      try {
+        const directory = await isDirectory(filePath);
+  
+        if (directory) {
+          processFolder(filePath)
+        }
+  
+        if (isPDF(filePath)) {
+          const isbn = await extractISBNFromPDF(filePath)
+          console.log('ISBN:', isbn)
+        }
+  
+        return
+  
+        if (isEpub(filePath)) {
+          await retrieveAndProcessMetadata(filePath)
+        } 
+      } catch (e) {
+        console.log('ERROR: UNABEL TO HANDLE', filePath)
+        console.log(e)
+        console.log('------------')
       }
-
-      if (isPDF(filePath)) {
-        const isbn = await extractISBNFromPDF(filePath)
-        console.log('ISBN:', isbn)
-      }
-
-      return
-
-      if (isEpub(filePath)) {
-        await retrieveAndProcessMetadata(filePath)
-      }
-
     }
   });
 }
