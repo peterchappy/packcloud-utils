@@ -6,6 +6,7 @@ import { getFolderToRunIn, isEpub, isPDF } from './utils';
 import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
 import { isDirectory } from './files';
+import * as pdf from 'pdf-parse';
 
 require('dotenv').config()
 
@@ -187,6 +188,25 @@ export const retrieveAndProcessMetadata = async (filePath: string) => {
   }
 }
 
+async function extractISBNFromPDF(filePath: string): Promise<string | undefined> {
+  const dataBuffer = fs.readFileSync(filePath);
+  
+  const data = await pdf(dataBuffer);
+
+  const isbnRegex = /(?:ISBN(?:-1[03])?:? )?(([0-9]-?){9}X|[0-9]{10}|([0-9]-?){12}[0-9]{3}|[0-9]{13})/g;
+  const match = data.text.match(isbnRegex);
+  
+  if (match && match[0]) {
+    return cleanISBN(match[0]);
+  }
+
+  return undefined;
+}
+
+function cleanISBN(isbn: string): string {
+  return isbn.replace(/-/g, '');
+}
+
 export const processFolder = (folderPath: string) => {
   fs.readdir(folderPath, async (error, files) => {
     if (error) {
@@ -203,7 +223,7 @@ export const processFolder = (folderPath: string) => {
       }
 
       if (isPDF(filePath)) {
-        const isbn = await retrieveISBN(filePath)
+        const isbn = await extractISBNFromPDF(filePath)
         console.log('ISBN:', isbn)
       }
 
