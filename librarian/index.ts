@@ -109,7 +109,7 @@ export const processFile = async (filePath: string) => {
     } else {
       console.log(`No comicbooks folder configured in the .env file. Skipping ${filePath}`);
     }
-  } else if (['.mobi', '.epub'].includes(fileExtension)) {
+  } else if (['.mobi', '.epub', ".pdf"].includes(fileExtension)) {
     if (booksFolder) {
       await moveFileToFolder(filePath, booksFolder);
       await retrieveAndProcessMetadata(`${filePath}.metadata.json`);
