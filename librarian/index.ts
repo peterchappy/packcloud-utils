@@ -94,25 +94,25 @@ export const retrieveAndProcessMetadata = async (filePath: string) => {
   }
 }
 
-export const processFile = (filePath: string) => {
+export const processFile = async (filePath: string) => {
   const fileExtension = path.extname(filePath).toLowerCase();
 
   if (['.mp3', '.mp4'].includes(fileExtension)) {
     if (audiobooksFolder) {
-      moveFileToFolder(filePath, audiobooksFolder);
+      await moveFileToFolder(filePath, audiobooksFolder);
     } else {
       console.log(`No audiobooks folder configured in the .env file. Skipping ${filePath}`);
     }
   } else if (['.cbz', '.cbr'].includes(fileExtension)) {
     if (comicbooksFolder) {
-      moveFileToFolder(filePath, comicbooksFolder);
+      await moveFileToFolder(filePath, comicbooksFolder);
     } else {
       console.log(`No comicbooks folder configured in the .env file. Skipping ${filePath}`);
     }
   } else if (['.mobi', '.epub'].includes(fileExtension)) {
     if (booksFolder) {
-      moveFileToFolder(filePath, booksFolder);
-      retrieveAndProcessMetadata(`${filePath}.metadata.json`);
+      await moveFileToFolder(filePath, booksFolder);
+      await retrieveAndProcessMetadata(`${filePath}.metadata.json`);
     } else {
       console.log(`No books folder configured in the .env file. Skipping ${filePath}`);
     }
@@ -122,10 +122,10 @@ export const processFile = (filePath: string) => {
       output: process.stdout,
     });
 
-    readline.question(`Where would you like to move ${filePath}? `, (answer) => {
+    readline.question(`Where would you like to move ${filePath}? `, async (answer) => {
       readline.close();
 
-      moveFileToFolder(filePath, answer);
+      await moveFileToFolder(filePath, answer);
     });
   }
 }
@@ -137,8 +137,14 @@ export const processFolder = (folderPath: string) => {
       return;
     }
 
+    let containsAudiobook = false;
     files.forEach((file) => {
       const filePath = path.join(folderPath, file);
+      const fileExtension = path.extname(filePath).toLowerCase();
+
+      if (['.mp3', '.mp4'].includes(fileExtension)) {
+        containsAudiobook = true;
+      }
 
       fs.stat(filePath, (error, stats) => {
         if (error) {
@@ -146,13 +152,25 @@ export const processFolder = (folderPath: string) => {
           return;
         }
 
-        if (stats.isFile()) {
-          processFile(filePath);
-        } else if (stats.isDirectory()) {
+        if (stats.isDirectory()) {
           processFolder(filePath);
         }
       });
     });
+
+    if (containsAudiobook) {
+      if (audiobooksFolder) {
+        fs.rename(folderPath, path.join(audiobooksFolder, path.basename(folderPath)), (error) => {
+          if (error) {
+            console.error(`Error moving folder ${folderPath}: ${error.message}`);
+          } else {
+            console.log(`Moved ${folderPath} to ${path.join(audiobooksFolder, path.basename(folderPath))}`);
+          }
+        });
+      } else {
+        console.log(`No audiobooks folder configured in the .env file. Skipping ${folderPath}`);
+      }
+    }
   });
 }
 
