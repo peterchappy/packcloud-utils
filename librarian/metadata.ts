@@ -124,7 +124,7 @@ export const retrieveAndProcessMetadata = async (filePath: string) => {
     }
     
     // TIMEOUT TO NOT GET RATE LIMITED
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     const metadata = await fetchGoogleBooksMetadata(isbn);
 
@@ -141,7 +141,7 @@ export const retrieveAndProcessMetadata = async (filePath: string) => {
     //   }
     // });
   } catch (error) {
-    console.error(`Error retrieving metadata for ${filePath}:`, error);
+    console.error(`Error retrieving metadata for ${filePath}:`, error?.data?.error);
   }
 }
 
