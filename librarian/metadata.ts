@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as Tesseract from 'tesseract.js';
 import * as fs from 'fs'
 import { getFolderToRunIn } from './utils';
-import * as AdmZip from 'adm-zip';
+import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
 
 const parser = new XMLParser();
