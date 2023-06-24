@@ -122,6 +122,9 @@ export const retrieveAndProcessMetadata = async (filePath: string) => {
       console.log('Metadata: MISSING ISBN ', filePath);
       return
     }
+    
+    // TIMEOUT TO NOT GET RATE LIMITED
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     const metadata = await fetchGoogleBooksMetadata(isbn);
 
