@@ -29,8 +29,8 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
 
     const opfContent = opfEntry.getData().toString('utf8');
     const opfObj = parser.parse(opfContent);
-
-    const metadata = opfObj['opf:package']['opf:metadata'];
+    const opfPackage = opfObj['opf:package'] || {}
+    const metadata = opfPackage['opf:metadata'];
     if (!metadata) {
       console.log('METADATA: ', opfObj)
       return null;
