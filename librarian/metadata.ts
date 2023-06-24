@@ -14,7 +14,7 @@ const padWithZeroes = (number: number, digits: number): string => {
 }
 
 
-export const isISBN = (isbn: number | string): boolean => {
+export const isISBN = (isbn: number | string): string | undefined => {
   const formattedPossibleISBN = typeof isbn === 'string'
     ? isbn.replace(/-/g, '')
     : String(isbn).length < 10
@@ -23,7 +23,8 @@ export const isISBN = (isbn: number | string): boolean => {
 
   const isbn10Regex = /^(?:[0-9]{9}X|[0-9]{10})$/; // ISBN-10 should be 9 digits followed by an X or 10 digits
   const isbn13Regex = /^(?:97[89][0-9]{10})$/; // ISBN-13 should start with 978 or 979 followed by 10 digits
-  return isbn10Regex.test(formattedPossibleISBN) || isbn13Regex.test(formattedPossibleISBN);
+  const iValidISBN = isbn10Regex.test(formattedPossibleISBN) || isbn13Regex.test(formattedPossibleISBN);
+  return iValidISBN ? formattedPossibleISBN : undefined;
 }
 
 export async function retrieveISBN(filePath: string): Promise<string> {
