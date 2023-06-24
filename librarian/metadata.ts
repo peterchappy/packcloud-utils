@@ -52,11 +52,13 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
       return null;
     }
 
-    const identifier = Array.isArray(metadata['dc:identifier'])
-      ? metadata['dc:identifier'].find(x => isISBN(formatISBN(x)))
-      : metadata['dc:identifier']
-      ? metadata['dc:identifier']
-      : metadata['dc:Identifier'];
+    const identifierProperty = metadata['dc:identifier']['dc-metadata'] || metadata['dc:identifier']
+
+    const identifier = Array.isArray(identifierProperty['dc:identifier'])
+      ? identifierProperty['dc:identifier'].find(x => isISBN(formatISBN(x)))
+      : identifierProperty['dc:identifier']
+      ? identifierProperty['dc:identifier']
+      : identifierProperty['dc:Identifier'];
 
     if (identifier) {
       return formatISBN(identifier);
