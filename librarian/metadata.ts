@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as path from 'path';
 import * as Tesseract from 'tesseract.js';
 import * as fs from 'fs'
-import { getFolderToRunIn } from './utils';
+import { getFolderToRunIn, isEpub } from './utils';
 import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
 import { isDirectory } from './files';
@@ -132,7 +132,10 @@ export const processFolder = (folderPath: string) => {
         processFolder(filePath)
       }
 
-      await retrieveAndProcessMetadata(filePath)
+      if (isEpub(filePath)) {
+        await retrieveAndProcessMetadata(filePath)
+      }
+
     });
   });
 }
