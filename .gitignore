@@ -1,0 +1,34 @@
+# OS and Editor Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node.js Files
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+
+# Build Files
+dist/
+build/
+out/
+*.log
+
+# Environment Variables
+.env
+
+# Compiled Output
+lib/
+dist/
+build/
+
+# Miscellaneous
+*.tmp
+*.bak
+*.backup
+*.old
