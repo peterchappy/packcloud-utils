@@ -129,7 +129,7 @@ export const processFolder = (folderPath: string) => {
       const directory = await isDirectory(filePath);
 
       if (directory) {
-        return
+        processFolder(filePath)
       }
 
       await retrieveAndProcessMetadata(filePath)
