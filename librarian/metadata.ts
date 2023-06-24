@@ -48,7 +48,7 @@ export const  fetchGoogleBooksMetadata = async (isbn: string) => {
   if (data && data.items && data.items.length > 0) {
     const book = data.items[0];
     const { title, authors, description } = book.volumeInfo;
-    return { title, authors, description };
+    return { title, authors, description, ...book };
   }
 
   throw new Error(`No metadata found for ISBN ${isbn}`);
@@ -56,7 +56,9 @@ export const  fetchGoogleBooksMetadata = async (isbn: string) => {
 
 export const retrieveAndProcessMetadata = async (filePath: string) => {
   try {
+    
     const isbn = await retrieveISBN(filePath);
+    console.log('Metadata: ISBN = ', isbn);
     const metadata = await fetchGoogleBooksMetadata(isbn);
 
     // Process the retrieved metadata
