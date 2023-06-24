@@ -147,21 +147,10 @@ export const processFolder = (folderPath: string) => {
       if (['.mp3', '.mp4'].includes(fileExtension)) {
         containsAudiobook = true;
       }
-
-      fs.stat(filePath, (error, stats) => {
-        if (error) {
-          console.error(`Error getting stats for ${filePath}: ${error.message}`);
-          return;
-        }
-
-        if (stats.isDirectory()) {
-          processFolder(filePath);
-        }
-      });
     });
 
-    if (containsAudiobook) {
-      if (audiobooksFolder) {
+
+    if (containsAudiobook && audiobooksFolder) {
         fs.rename(folderPath, path.join(audiobooksFolder, path.basename(folderPath)), (error) => {
           if (error) {
             console.error(`Error moving folder ${folderPath}: ${error.message}`);
@@ -169,10 +158,25 @@ export const processFolder = (folderPath: string) => {
             console.log(`Moved ${folderPath} to ${path.join(audiobooksFolder, path.basename(folderPath))}`);
           }
         });
-      } else {
-        console.log(`No audiobooks folder configured in the .env file. Skipping ${folderPath}`);
-      }
     }
+
+    files.forEach(async (file) => {
+      const filePath = path.join(folderPath, file);
+
+      fs.stat(filePath, async (error, stats) => {
+        console.log(`PROCESSING: ${filePath}`)
+        if (error) {
+          console.error(`Error getting stats for ${filePath}: ${error.message}`);
+          return;
+        }
+
+        if (stats.isDirectory()) {
+          return processFolder(filePath);
+        }else{
+          return await processFile(filePath)
+        }
+      });
+    });
   });
 }
 
