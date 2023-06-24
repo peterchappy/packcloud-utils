@@ -40,6 +40,7 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
       : metadata['dc:identifier'];
 
     if (identifier && identifier.scheme === 'ISBN') {
+      console.log('Identifier:', identifier)
       return identifier['#text'];
     }
 
