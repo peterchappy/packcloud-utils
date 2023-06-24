@@ -67,6 +67,8 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
       return formatISBN(identifier);
     }
 
+    console.log('METADATA: ', metadata)
+
     return null;
   } catch (err) {
     console.error(err);
@@ -96,6 +98,28 @@ export const  fetchISBNFromText = async (text: string): Promise<string> => {
   } else {
     throw new Error('ISBN not found');
   }
+}
+
+export const  fetchGoogleBookISBNByTitleAndAuthor = async (title: string, author: string) => {
+  const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
+  const url = `https://www.googleapis.com/books/v1/volumes?q=intitle:${title}+inauthor:${author}&key=${apiKey}`;
+
+  const response = await axios.get(url);
+  const data = response.data;
+
+  if (data.items) {
+    const book = data.items[0]; // take the first book
+    const identifiers = book.volumeInfo.industryIdentifiers;
+    return identifiers.find(id => {
+      if (id.type === 'ISBN_13') {
+        return id.identifier
+      } else if (id.type === 'ISBN_10') {
+        return id.identifier
+      }
+    });
+  }
+
+  throw new Error(`No ISBN found for ${title} by ${author}`);
 }
 
 export const  fetchGoogleBooksMetadata = async (isbn: string) => {
