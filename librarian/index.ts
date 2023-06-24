@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import axios from 'axios';
 import * as Tesseract from 'tesseract.js';
+import { AUDIOBOOK_EXTENSIONS, EBOOK_EXTENSIONS } from './constants';
 
 require('dotenv').config();
 
@@ -101,7 +102,7 @@ export const retrieveAndProcessMetadata = async (filePath: string) => {
 export const processFile = async (filePath: string) => {
   const fileExtension = path.extname(filePath).toLowerCase();
 
-  if (['.mp3', '.mp4'].includes(fileExtension)) {
+  if (AUDIOBOOK_EXTENSIONS.includes(fileExtension)) {
     if (audiobooksFolder) {
       await moveFileToFolder(filePath, audiobooksFolder);
     } else {
@@ -113,7 +114,7 @@ export const processFile = async (filePath: string) => {
     } else {
       console.log(`No comicbooks folder configured in the .env file. Skipping ${filePath}`);
     }
-  } else if (['.mobi', '.epub', ".pdf"].includes(fileExtension)) {
+  } else if (EBOOK_EXTENSIONS.includes(fileExtension)) {
     if (booksFolder) {
       await moveFileToFolder(filePath, booksFolder);
     } else {
@@ -136,7 +137,7 @@ export const processFolder = (folderPath: string) => {
       const filePath = path.join(folderPath, file);
       const fileExtension = path.extname(filePath).toLowerCase();
 
-      if (['.mp3', '.mp4'].includes(fileExtension)) {
+      if (AUDIOBOOK_EXTENSIONS.includes(fileExtension)) {
         containsAudiobook = true;
       }
     });
