@@ -6,7 +6,7 @@ import { getFolderToRunIn, isEpub, isPDF } from './utils';
 import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
 import { isDirectory } from './files';
-import * as pdf from 'pdf-parse';
+const pdf = require('pdf-parse');
 
 require('dotenv').config()
 
