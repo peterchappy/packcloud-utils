@@ -222,7 +222,7 @@ export const processFolder = (folderPath: string) => {
           console.log('ISBN:', isbn)
         }
   
-        return
+        continue;
   
         if (isEpub(filePath)) {
           await retrieveAndProcessMetadata(filePath)
