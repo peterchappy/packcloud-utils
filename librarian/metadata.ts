@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as path from 'path';
 import * as Tesseract from 'tesseract.js';
 import * as fs from 'fs'
-import { getFolderToRunIn, isEpub } from './utils';
+import { getFolderToRunIn, isEpub, isPDF } from './utils';
 import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
 import { isDirectory } from './files';
@@ -48,8 +48,8 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
     const opfObj = parser.parse(opfContent);
     const opfPackage = opfObj['opf:package'] || opfObj.package || {}
     const metadata = opfPackage['opf:metadata'] || opfPackage.metadata;
+
     if (!metadata) {
-      console.log('METADATA: ', metadata)
       return null;
     }
 
@@ -71,9 +71,12 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
     const author = metadata['dc:creator']
     const publisher = metadata['dc:publisher']
 
-    const isbn = await fetchGoogleBookISBN(title,author,publisher)
+    if (!title || !author) {
+      console.log('METADATA: ', metadata)
+    }
 
-    return null;
+    const isbn = await fetchGoogleBookISBN(title,author,publisher)
+    return isbn;
   } catch (err) {
     console.error(err);
     return null;
@@ -197,6 +200,11 @@ export const processFolder = (folderPath: string) => {
 
       if (directory) {
         processFolder(filePath)
+      }
+
+      if (isPDF(filePath)) {
+        const isbn = await retrieveISBN(filePath)
+        console.log('ISBN:', isbn)
       }
 
       if (isEpub(filePath)) {
