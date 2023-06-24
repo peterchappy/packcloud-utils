@@ -217,12 +217,6 @@ export const processFolder = (folderPath: string) => {
     for (const file of files) {
       const filePath = path.join(folderPath, file);
       try {
-        const directory = await isDirectory(filePath);
-  
-        if (directory) {
-          processFolder(filePath)
-        }
-  
         if (isPDF(filePath)) {
           const isbn = await extractISBNFromPDF(filePath)
           console.log('ISBN:', isbn)
@@ -233,6 +227,13 @@ export const processFolder = (folderPath: string) => {
         if (isEpub(filePath)) {
           await retrieveAndProcessMetadata(filePath)
         } 
+
+        const directory = await isDirectory(filePath);
+  
+        if (directory) {
+          processFolder(filePath)
+        }
+
       } catch (e) {
         console.log('ERROR: UNABEL TO HANDLE', filePath)
         console.log(e)
