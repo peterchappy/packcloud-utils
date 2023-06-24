@@ -124,7 +124,7 @@ export const retrieveAndProcessMetadata = async (filePath: string) => {
     }
     
     // TIMEOUT TO NOT GET RATE LIMITED
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     const metadata = await fetchGoogleBooksMetadata(isbn);
 
