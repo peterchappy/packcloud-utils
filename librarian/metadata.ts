@@ -54,7 +54,7 @@ async function getIsbnFromEpub(filepath: string): Promise<string | null> {
     }
 
     const identifier = Array.isArray(metadata['dc:identifier'])
-      ? metadata['dc:identifier'].find(isISBN)
+      ? metadata['dc:identifier'].find(x => isISBN(formatISBN(x)))
       : metadata['dc:identifier']
       ? metadata['dc:identifier']
       : metadata['dc:Identifier'];
