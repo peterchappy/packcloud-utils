@@ -16,7 +16,7 @@ const padWithZeroes = (number: number, digits: number): string => {
 
 export const isISBN = (isbn: number | string): boolean => {
   const formattedPossibleISBN = typeof isbn === 'string'
-    ? isbn
+    ? isbn.replace(/-/g, '')
     : String(isbn).length < 10
       ? padWithZeroes(isbn, String(isbn).length - 10)
       : String(isbn);
