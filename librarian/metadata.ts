@@ -5,6 +5,7 @@ import * as fs from 'fs'
 import { getFolderToRunIn } from './utils';
 import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
+import { isDirectory } from './files';
 
 const parser = new XMLParser();
 
@@ -125,6 +126,12 @@ export const processFolder = (folderPath: string) => {
 
     files.forEach(async (file) => {
       const filePath = path.join(folderPath, file);
+      const directory = isDirectory(filePath);
+
+      if (directory) {
+        return
+      }
+      
       await retrieveAndProcessMetadata(filePath)
     });
   });
