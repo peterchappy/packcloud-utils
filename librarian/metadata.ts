@@ -100,7 +100,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
           const directory = await isDirectory(filePath);
     
           if (directory) {
-            const nestedLookup = processFolder(filePath)
+            const nestedLookup = await processFolder(filePath)
             R.mergeLeft(lookup, nestedLookup)
             continue;
           }
