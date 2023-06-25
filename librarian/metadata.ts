@@ -42,7 +42,7 @@ export const fetchISBNFromText = async (text: string): Promise<string> => {
 const BACKOFF_TIME_MULTIPLE = 250
 const AMOUNT_OF_BACKOFFS = 5
 
-export const retrieveAndProcessMetadata = async (isbn: string, backoffs = 0) => {
+export const retrieveAndProcessMetadata = async (isbn: string, backoffs = 0): Promise<any> => {
   try {
     const metadata = await fetchGoogleBooksMetadata(isbn);
     // Write the metadata to a file
@@ -59,13 +59,13 @@ export const retrieveAndProcessMetadata = async (isbn: string, backoffs = 0) => 
 
     if (error.response.status !== 429) {
       log(`ERROR: retrieving metadata for ${isbn} -`, String(error));
-      return
+      return Promise.resolve()
     }
     log(`ERROR: Rate Limited while fetching ${isbn}`);
 
     if (backoffs > AMOUNT_OF_BACKOFFS) {
       log(`ERROR: Backoff count of ${AMOUNT_OF_BACKOFFS} reached`);
-      return
+      return Promise.resolve()
     }
 
     const backoffTime = BACKOFF_TIME_MULTIPLE * (backoffs + 1)
@@ -116,36 +116,37 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
             isbn = await getIsbnFromEpub(filePath);
           } 
 
-          if (isbn) {
-            log(`PROCESSING: ISBN found for ${filePath} - ${isbn}`);
-            await new Promise((resolve) => setTimeout(resolve, 100));
-
-            log(`PROCESSING: Fetching metadata for ${filePath} - ${isbn}`)
-            const metaData = await retrieveAndProcessMetadata(isbn)
-
-            if (!metaData) {
-              log(`ERROR: Unable to retrieve metadata for ${filePath} with matched ISBN ${isbn}`)
-              log(`ERROR: Unable to retrieve metadata for ${filePath}`)
-            } else {
-              log(`PROCESSING: SUCCESS!!!`)
-            }
-
-            const primaryCategory = metaData?.volumeInfo?.categories[0];
-
-            if (!primaryCategory) {
-              continue
-            }
-
-            if (lookup[primaryCategory]) {
-              lookup[primaryCategory].push(metaData.title)
-            } else {
-              lookup[primaryCategory] = [metaData.title]
-            }
-          } else {
+          if (!isbn) {
             verboseLog(`ERROR: ISBN NOT FOUND for ${filePath}`)
+            continue;
           }
 
+          log(`PROCESSING: ISBN found for ${filePath} - ${isbn}`);
+          await new Promise((resolve) => setTimeout(resolve, 100));
 
+          log(`PROCESSING: Fetching metadata for ${filePath} - ${isbn}`)
+          const metaData = await retrieveAndProcessMetadata(isbn)
+
+          if (!metaData) {
+            log(`ERROR: Unable to retrieve metadata for ${filePath} with matched ISBN ${isbn}`)
+            log(`ERROR: Unable to retrieve metadata for ${filePath}`)
+            continue;
+          }
+          
+          log(`PROCESSING: SUCCESS!!!`)
+
+          const primaryCategory = metaData?.volumeInfo?.categories[0];
+
+          if (!primaryCategory) {
+            continue
+          }
+
+          if (lookup[primaryCategory]) {
+            lookup[primaryCategory].push(metaData.title)
+          } else {
+            lookup[primaryCategory] = [metaData.title]
+          }
+          
         } catch (e) {
           console.log('ERROR: UNABEL TO HANDLE', filePath)
           console.log(e)
