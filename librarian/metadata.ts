@@ -96,13 +96,19 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
           if (isbn) {
             verboseLog(`ISBN FOUND FOR ${filePath}`)
             verboseLog(`ISBN =`, isbn)
+
+            log(`PROCESSING: ISBN found for ${filePath} - ${isbn}`);
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            log(`PROCESSING: Fetching metadata for ${filePath} - ${isbn}`)
             const metaData = await retrieveAndProcessMetadata(isbn)
 
             if (!metaData) {
               log(`ERROR: Unable to retrieve metadata for ${filePath} with matched ISBN ${isbn}`)
               log(`ERROR: Unable to retrieve metadata for ${filePath}`)
+            } else {
+              log(`PROCESSING: SUCCESS!!!`)
             }
-            
+
             const primaryCategory = metaData?.volumeInfo?.categories[0];
 
             if (!primaryCategory) {
