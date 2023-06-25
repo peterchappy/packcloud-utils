@@ -39,7 +39,10 @@ export const fetchISBNFromText = async (text: string): Promise<string> => {
   }
 }
 
-export const retrieveAndProcessMetadata = async (isbn: string) => {
+const BACKOFF_TIME_MULTIPLE = 100
+const AMOUNT_OF_BACKOFFS = 5
+
+export const retrieveAndProcessMetadata = async (isbn: string, backoffs = 0) => {
   try {
     const metadata = await fetchGoogleBooksMetadata(isbn);
     // Write the metadata to a file
@@ -53,7 +56,25 @@ export const retrieveAndProcessMetadata = async (isbn: string) => {
     // });
     return metadata
   } catch (error) {
-    console.error(`Error retrieving metadata for ${isbn}:`, error);
+
+    if (error.response.status !== 429) {
+      log(`ERROR: retrieving metadata for ${isbn} -`, String(error));
+      return
+    }
+    log(`ERROR: Rate Limited while fetching ${isbn}`);
+
+    if (backoffs > AMOUNT_OF_BACKOFFS) {
+      log(`ERROR: Backoff count of ${AMOUNT_OF_BACKOFFS} reached`);
+      return
+    }
+
+    const backoffTime = BACKOFF_TIME_MULTIPLE * (backoffs + 1)
+
+    log(`PROCESSING: Attemtping again in ${backoffTime}ms. (Attempt ${backoffs})`);
+
+    await new Promise((resolve) => setTimeout(resolve, backoffTime));
+
+    return retrieveAndProcessMetadata(isbn, backoffs + 1)
   }
 }
 
