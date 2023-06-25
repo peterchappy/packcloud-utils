@@ -53,7 +53,7 @@ export const retrieveAndProcessMetadata = async (isbn: string) => {
     // });
     return metadata
   } catch (error) {
-    console.error(`Error retrieving metadata for ${isbn}:`, error?.data?.error);
+    console.error(`Error retrieving metadata for ${isbn}:`, error);
   }
 }
 
@@ -73,6 +73,8 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
 
       for (const file of files) {
         const filePath = path.join(folderPath, file);
+        log(`PROCESSING: ${filePath}`);
+
         try {
           const directory = await isDirectory(filePath);
     
@@ -94,11 +96,9 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
           } 
 
           if (isbn) {
-            verboseLog(`ISBN FOUND FOR ${filePath}`)
-            verboseLog(`ISBN =`, isbn)
-
             log(`PROCESSING: ISBN found for ${filePath} - ${isbn}`);
             await new Promise((resolve) => setTimeout(resolve, 100));
+
             log(`PROCESSING: Fetching metadata for ${filePath} - ${isbn}`)
             const metaData = await retrieveAndProcessMetadata(isbn)
 
