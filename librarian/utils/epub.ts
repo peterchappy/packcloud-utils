@@ -27,14 +27,14 @@ export async function getIsbnFromEpub(filepath: string): Promise<string | undefi
       return undefined;
     }
 
-
+    // Accounting for various edge cases I've come across.
     const identifier = Array.isArray(metadata['dc:identifier'])
     ? metadata['dc:identifier'].find(R.pipe(formatISBN, isISBN))
     : metadata['dc:identifier'] && isISBN(metadata['dc:identifier'])
       ? metadata['dc:identifier']
         : metadata['dc:Identifier'] && isISBN(metadata['dc:Identifier'])
           ? metadata['dc:Identifier']
-          : metadata['dc-metadata']['dc:Identifier'] && isISBN(metadata['dc:Identifier'])
+          : metadata['dc-metadata'] && metadata['dc-metadata']['dc:Identifier'] && isISBN(metadata['dc-metadata']['dc:Identifier'])
             ? metadata['dc-metadata']['dc:Identifier']
             : undefined;
     
