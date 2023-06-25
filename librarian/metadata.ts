@@ -6,6 +6,7 @@ import { getFolderToRunIn, isEpub, isPDF } from './utils';
 import { isDirectory } from './utils/files';
 import { getIsbnFromEpub } from './utils/epub';
 import { extractISBNFromPDF } from './utils/pdf';
+import { verboseLog } from './utils/logs';
 
 const pdf = require('pdf-parse');
 
@@ -39,10 +40,6 @@ export const fetchISBNFromText = async (text: string): Promise<string> => {
 export const retrieveAndProcessMetadata = async (isbn: string) => {
   try {
     const metadata = await fetchGoogleBooksMetadata(isbn);
-
-    // Process the retrieved metadata
-    console.log('Metadata:', metadata);
-
     // Write the metadata to a file
     // const metadataFilePath = `${filePath}.metadata.json`;
     // fs.writeFile(metadataFilePath, JSON.stringify(metadata), (error) => {
@@ -89,8 +86,8 @@ export const processFolder = (folderPath: string) => {
         } 
 
         if (isbn) {
-          console.log(`ISBN FOUND FOR ${filePath}`)
-          console.log(`ISBN =`, isbn)
+          verboseLog(`ISBN FOUND FOR ${filePath}`)
+          verboseLog(`ISBN =`, isbn)
           const metaData = await retrieveAndProcessMetadata(isbn)
           const primaryCategory = metaData?.volumeInfo?.categories[0];
 
@@ -104,7 +101,7 @@ export const processFolder = (folderPath: string) => {
             lookup[primaryCategory] = [metaData.title]
           }
         } else {
-          console.log(`DEBUG: ISBN NOT FOUND for ${filePath}`)
+          verboseLog(`DEBUG: ISBN NOT FOUND for ${filePath}`)
         }
 
 
@@ -114,6 +111,8 @@ export const processFolder = (folderPath: string) => {
         console.log('------------')
       }
     }
+    
+    console.log(lookup)
   });
 }
 
