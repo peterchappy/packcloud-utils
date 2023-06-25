@@ -52,6 +52,7 @@ export const retrieveAndProcessMetadata = async (isbn: string) => {
     //     console.log(`Metadata for ${filePath} has been written to ${metadataFilePath}`);
     //   }
     // });
+    return metadata
   } catch (error) {
     console.error(`Error retrieving metadata for ${isbn}:`, error?.data?.error);
   }
@@ -64,6 +65,8 @@ export const processFolder = (folderPath: string) => {
       console.error(`Error reading folder ${folderPath}: ${error.message}`);
       return;
     }
+
+    const lookup = {}
 
     for (const file of files) {
       const filePath = path.join(folderPath, file);
@@ -88,7 +91,18 @@ export const processFolder = (folderPath: string) => {
         if (isbn) {
           console.log(`ISBN FOUND FOR ${filePath}`)
           console.log(`ISBN =`, isbn)
-          retrieveAndProcessMetadata(isbn)
+          const metaData = await retrieveAndProcessMetadata(isbn)
+          const primaryCategory = metaData?.volumeInfo?.categories[0];
+
+          if (!primaryCategory) {
+            continue
+          }
+
+          if (lookup[primaryCategory]) {
+            lookup[primaryCategory].push(metaData.title)
+          } else {
+            lookup[primaryCategory] = [metaData.title]
+          }
         } else {
           console.log(`DEBUG: ISBN NOT FOUND for ${filePath}`)
         }

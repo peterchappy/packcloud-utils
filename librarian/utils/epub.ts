@@ -4,6 +4,7 @@ import { isFileExtension } from './files';
 import * as R from 'ramda';
 import { formatISBN, isISBN } from './books';
 import { fetchGoogleBookISBN } from '../services';
+import { verboseLog } from './logs';
 
 export const parser = new XMLParser();
 
@@ -45,7 +46,7 @@ export async function getIsbnFromEpub(filepath: string): Promise<string | undefi
     const publisher = metadata['dc:publisher']
 
     if (!title || !author) {
-      console.log('METADATA: ', metadata)
+      verboseLog('ERROR: MISSING DATA', metadata)
     }
 
     const isbn = await fetchGoogleBookISBN(title,author,publisher)
