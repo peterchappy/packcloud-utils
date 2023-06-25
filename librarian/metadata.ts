@@ -39,7 +39,7 @@ export const fetchISBNFromText = async (text: string): Promise<string> => {
   }
 }
 
-const BACKOFF_TIME_MULTIPLE = 100
+const BACKOFF_TIME_MULTIPLE = 250
 const AMOUNT_OF_BACKOFFS = 5
 
 export const retrieveAndProcessMetadata = async (isbn: string, backoffs = 0) => {
