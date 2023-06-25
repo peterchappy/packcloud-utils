@@ -108,7 +108,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
 
           let isbn = undefined;
 
-          if (isPDF(filePath) && !isMagazine) {
+          if (isPDF(filePath) && !isMagazine(filePath)) {
             isbn = await extractISBNFromPDF(filePath)
           } 
 
@@ -162,7 +162,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
           console.log('------------')
         }
       }
-      
+
       resolve(lookup);
     });
   })
