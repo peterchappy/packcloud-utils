@@ -4,7 +4,7 @@ import { isFileExtension } from './files';
 import * as R from 'ramda';
 import { formatISBN, isISBN } from './books';
 import { fetchGoogleBookISBN } from '../services';
-import { verboseLog } from './logs';
+import { log, verboseLog } from './logs';
 
 export const parser = new XMLParser();
 
@@ -30,11 +30,13 @@ export async function getIsbnFromEpub(filepath: string): Promise<string | undefi
 
     const identifier = Array.isArray(metadata['dc:identifier'])
     ? metadata['dc:identifier'].find(R.pipe(formatISBN, isISBN))
-    : metadata['dc:identifier']
+    : metadata['dc:identifier'] && isISBN(metadata['dc:identifier'])
       ? metadata['dc:identifier']
-        : metadata['dc:Identifier']
+        : metadata['dc:Identifier'] && isISBN(metadata['dc:Identifier'])
           ? metadata['dc:Identifier']
-          : metadata['dc-metadata']['dc:Identifier'];
+          : metadata['dc-metadata']['dc:Identifier'] && isISBN(metadata['dc:Identifier'])
+            ? metadata['dc-metadata']['dc:Identifier']
+            : undefined;
     
 
     if (identifier) {
@@ -49,7 +51,14 @@ export async function getIsbnFromEpub(filepath: string): Promise<string | undefi
       verboseLog('ERROR: MISSING DATA', metadata)
     }
 
-    const isbn = await fetchGoogleBookISBN(title,author,publisher)
+    log(`PROCESSING: Unable to find ISBN for ${filepath}`)
+    log(`PROCESSING: Looking up by`)
+    log(`PROCESSING: title - ${title}`)
+    log(`PROCESSING: author - ${author}`)
+    log(`PROCESSING: publisher - ${publisher}`)
+
+    const isbn = await fetchGoogleBookISBN(title, author, publisher)
+    
     return isbn;
   } catch (err) {
     console.error(err);

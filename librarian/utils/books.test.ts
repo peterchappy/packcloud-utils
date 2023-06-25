@@ -38,24 +38,10 @@ describe('formatISBN', () => {
 });
 
 describe('isISBN', () => {
-  it('should return true for a valid ISBN-10', () => {
-    const isbn = '0123456789';
-    const isValidISBN = isISBN(isbn);
-
-    expect(isValidISBN).toBe(true);
-  });
-
-  it('should return true for a valid ISBN-13', () => {
-    const isbn = '9780123456789';
-    const isValidISBN = isISBN(isbn);
-
-    expect(isValidISBN).toBe(true);
-  });
-
-  it('should return false for an invalid ISBN', () => {
-    const isbn = '12345';
-    const isValidISBN = isISBN(isbn);
-
-    expect(isValidISBN).toBe(false);
+  it('isISBN', () => {
+    expect(isISBN('0123456789')).toBe(true);
+    expect(isISBN('9780123456789')).toBe(true);
+    expect(isISBN('e1f7d7a096dd4915bc3c5b60ac2b40d4')).toBe(false);
+    expect(isISBN('1234')).toBe(false);
   });
 });
