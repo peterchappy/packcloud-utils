@@ -1,7 +1,7 @@
 const ISBN_10_LENGTH = 10
 
 export const formatISBN = (isbn: number | string): string => typeof isbn === 'string'
-    ? isbn.replace(/-/g, '')
+    ? isbn.replace(/-/g, '').replace('urn:isbn:', "")
     : String(isbn).length < ISBN_10_LENGTH
       ? isbn.toString().padStart(ISBN_10_LENGTH, '0')
       : String(isbn)

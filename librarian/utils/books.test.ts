@@ -8,6 +8,13 @@ describe('formatISBN', () => {
     expect(formattedISBN).toBe('0123456789');
   });
 
+  it('should remove urn:isbn: from ISBN when input is a string', () => {
+    const isbn = 'urn:isbn:0-123-45678-9';
+    const formattedISBN = formatISBN(isbn);
+
+    expect(formattedISBN).toBe('0123456789');
+  });
+
   it('should pad ISBN with leading zeros when input is less than 10 digits', () => {
     const isbn = 123;
     const formattedISBN = formatISBN(isbn);
