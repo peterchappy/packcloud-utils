@@ -61,7 +61,7 @@ export const retrieveAndProcessMetadata = async (isbn: string, backoffs = 0): Pr
       log(`ERROR: retrieving metadata for ${isbn} -`, String(error));
       return Promise.resolve()
     }
-    
+
     log(`ERROR: Rate Limited while fetching ${isbn}`);
 
     if (backoffs > AMOUNT_OF_BACKOFFS) {
@@ -162,9 +162,13 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
 
 const rootFolder = getFolderToRunIn()
 
-if (rootFolder) {
-  const lookup = processFolder(rootFolder);
-  console.log(lookup)
-} else {
-  console.error('Please provide a root folder as a command line argument.');
+const main = async () => {
+  if (rootFolder) {
+    const lookup = await processFolder(rootFolder);
+    console.log(lookup)
+  } else {
+    console.error('Please provide a root folder as a command line argument.');
+  }
 }
+
+main()
