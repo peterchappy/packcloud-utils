@@ -1,3 +1,10 @@
-export const AUDIOBOOK_EXTENSIONS = ['.mp3', '.mp4', '.m4b'];
-export const COMIC_BOOK_EXTENSIONS = ['.cbz', '.cbr'];
-export const EBOOK_EXTENSIONS = ['.mobi', '.epub', ".pdf"];
+import { AudiobookExtensionKind, ComicExtensionKind, EbookExtensionKind } from './types';
+
+export const AUDIOBOOK_EXTENSIONS: AudiobookExtensionKind[] = ['.mp3', '.mp4', '.m4b'];
+export const COMIC_BOOK_EXTENSIONS: ComicExtensionKind[] = ['.cbz', '.cbr'];
+export const EBOOK_EXTENSIONS: EbookExtensionKind[] = ['.mobi', '.epub', ".pdf"];
+
+
+export const audiobooksFolder = process.env.AUDIOBOOKS_FOLDER;
+export const comicbooksFolder = process.env.COMICBOOKS_FOLDER;
+export const booksFolder = process.env.BOOKS_FOLDER;

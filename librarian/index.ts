@@ -1,13 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { AUDIOBOOK_EXTENSIONS, COMIC_BOOK_EXTENSIONS, EBOOK_EXTENSIONS } from './constants';
+import { AUDIOBOOK_EXTENSIONS, COMIC_BOOK_EXTENSIONS, EBOOK_EXTENSIONS, audiobooksFolder, booksFolder, comicbooksFolder } from './constants';
 import { getFolderToRunIn } from './utils';
 
 require('dotenv').config();
 
-const audiobooksFolder = process.env.AUDIOBOOKS_FOLDER;
-const comicbooksFolder = process.env.COMICBOOKS_FOLDER;
-const booksFolder = process.env.BOOKS_FOLDER;
 
 export async function moveFileToFolder(filePath: string, folderPath: string) {
   const normalizedFilePath = filePath.replace(/\s/g, "_");
@@ -28,7 +25,8 @@ export async function moveFileToFolder(filePath: string, folderPath: string) {
 
 
 export const processFile = async (filePath: string) => {
-  const fileExtension = path.extname(filePath).toLowerCase();
+  // TODO - Better Type Guarding
+  const fileExtension: any = path.extname(filePath).toLowerCase();
 
   if (AUDIOBOOK_EXTENSIONS.includes(fileExtension)) {
     if (audiobooksFolder) {
@@ -63,7 +61,7 @@ export const processFolder = (folderPath: string, isRoot = false) => {
     let containsAudiobook = false;
     files.forEach((file) => {
       const filePath = path.join(folderPath, file);
-      const fileExtension = path.extname(filePath).toLowerCase();
+      const fileExtension: any = path.extname(filePath).toLowerCase();
 
       if (AUDIOBOOK_EXTENSIONS.includes(fileExtension)) {
         containsAudiobook = true;

@@ -1,88 +1,16 @@
-import axios from 'axios';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as Tesseract from 'tesseract.js';
-import * as fs from 'fs'
+import { fetchGoogleBooksMetadata } from './services';
 import { getFolderToRunIn, isEpub, isPDF } from './utils';
-import AdmZip from 'adm-zip';
-import { XMLParser } from 'fast-xml-parser';
-import { isDirectory } from './files';
+import { isDirectory } from './utils/files';
+import { getIsbnFromEpub } from './utils/epub';
+import { extractISBNFromPDF } from './utils/pdf';
+
 const pdf = require('pdf-parse');
 
 require('dotenv').config()
 
-const parser = new XMLParser();
-
-const ISBN_10_LENGTH = 10
-
-export const formatISBN = (isbn: number | string): string => typeof isbn === 'string'
-    ? isbn.replace(/-/g, '')
-    : String(isbn).length < ISBN_10_LENGTH
-      ? isbn.toString().padStart(ISBN_10_LENGTH, '0')
-      : String(isbn)
-
-export const isISBN = (isbn: string): boolean => {
-  const isbn10Regex = /^(?:[0-9]{9}X|[0-9]{10})$/; // ISBN-10 should be 9 digits followed by an X or 10 digits
-  const isbn13Regex = /^(?:97[89][0-9]{10})$/; // ISBN-13 should start with 978 or 979 followed by 10 digits
-  const iValidISBN = isbn10Regex.test(isbn) || isbn13Regex.test(isbn);
-  return iValidISBN ;
-}
-
-export async function retrieveISBN(filePath: string): Promise<string> {
-  try {
-    const extractedText = await performOCR(filePath);
-    const isbn = await fetchISBNFromText(extractedText);
-    return isbn;
-  } catch (error) {
-    throw new Error(`Error retrieving ISBN for ${filePath}: ${error.message}`);
-  }
-}
-
-async function getIsbnFromEpub(filepath: string): Promise<string | null> {
-  try {
-    const zip = new AdmZip(filepath);
-    const opfEntry = zip.getEntries().find(entry => entry.entryName.endsWith('.opf'));
-    if (!opfEntry) {
-      return null;
-    }
-
-    const opfContent = opfEntry.getData().toString('utf8');
-    const opfObj = parser.parse(opfContent);
-    const opfPackage = opfObj['opf:package'] || opfObj.package || {}
-    const metadata = opfPackage['opf:metadata'] || opfPackage.metadata;
-
-    if (!metadata) {
-      return null;
-    }
-
-
-    const identifier = Array.isArray(metadata['dc:identifier'])
-      ? metadata['dc:identifier'].find(x => isISBN(formatISBN(x)))
-      : metadata['dc:identifier']
-      ? metadata['dc:identifier']
-        : metadata['dc:Identifier']
-          ? metadata['dc:Identifier']
-          : metadata['dc-metadata']['dc:Identifier'];
-    
-
-    if (identifier) {
-      return formatISBN(identifier);
-    }
-
-    const title = metadata['dc:title']
-    const author = metadata['dc:creator']
-    const publisher = metadata['dc:publisher']
-
-    if (!title || !author) {
-      console.log('METADATA: ', metadata)
-    }
-
-    const isbn = await fetchGoogleBookISBN(title,author,publisher)
-    return isbn;
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
-}
 
 export async function performOCR(filePath: string): Promise<string> {
   const imageBuffer = fs.readFileSync(filePath);
@@ -93,7 +21,7 @@ export async function performOCR(filePath: string): Promise<string> {
   return extractedText;
 }
 
-export const  fetchISBNFromText = async (text: string): Promise<string> => {
+export const fetchISBNFromText = async (text: string): Promise<string> => {
   // Implement your logic to find and extract the ISBN from the extracted text
   // You can use regular expressions or other techniques to identify and retrieve the ISBN
 
@@ -106,55 +34,6 @@ export const  fetchISBNFromText = async (text: string): Promise<string> => {
   } else {
     throw new Error('ISBN not found');
   }
-}
-
-async function fetchGoogleBookISBN(title: string, author: string, publisher?: string): Promise<string | undefined> {
-  let query = `https://www.googleapis.com/books/v1/volumes?q=intitle:${title}+inauthor:${author}`;
-
-  if (publisher) {
-    query += `+inpublisher:${publisher}`;
-  }
-
-  try {
-    const response = await axios.get(query);
-    if (response.data.items) {
-      const book = response.data.items[0]; // take the first book
-      const identifiers = book.volumeInfo.industryIdentifiers;
-      
-      for (const id of identifiers) {
-        if (id.type === 'ISBN_13') {
-          return id.identifier;
-        }
-      }
-
-      // If no ISBN-13, return ISBN-10
-      for (const id of identifiers) {
-        if (id.type === 'ISBN_10') {
-          return id.identifier;
-        }
-      }
-    }
-    return undefined;
-  } catch (error) {
-    console.error(error);
-    return undefined;
-  }
-}
-
-export const  fetchGoogleBooksMetadata = async (isbn: string) => {
-  const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
-  const url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&key=${apiKey}`;
-
-  const response = await axios.get(url);
-  const data = response.data;
-
-  if (data && data.items && data.items.length > 0) {
-    const book = data.items[0];
-    const { title, authors, description } = book.volumeInfo;
-    return { title, authors, description, ...book };
-  }
-
-  throw new Error(`No metadata found for ISBN ${isbn}`);
 }
 
 export const retrieveAndProcessMetadata = async (isbn: string) => {
@@ -178,24 +57,6 @@ export const retrieveAndProcessMetadata = async (isbn: string) => {
   }
 }
 
-async function extractISBNFromPDF(filePath: string): Promise<string | undefined> {
-  const dataBuffer = fs.readFileSync(filePath);
-  
-  const data = await pdf(dataBuffer);
-
-  const isbnRegex = /(?:ISBN(?:-1[03])?:? )?(([0-9]-?){9}X|[0-9]{10}|([0-9]-?){12}[0-9]{3}|[0-9]{13})/g;
-  const match = data.text.match(isbnRegex);
-  
-  if (match && match[0]) {
-    return cleanISBN(match[0]);
-  }
-
-  return undefined;
-}
-
-function cleanISBN(isbn: string): string {
-  return isbn.replace(/-/g, '').replace("ISBN:", "");
-}
 
 export const processFolder = (folderPath: string) => {
   fs.readdir(folderPath, async (error, files) => {
@@ -227,8 +88,6 @@ export const processFolder = (folderPath: string) => {
         if (isbn) {
           console.log(`ISBN FOUND FOR ${filePath}`)
           console.log(`ISBN =`, isbn)
-          // TIMEOUT TO NOT GET RATE LIMITED
-          await new Promise(resolve => setTimeout(resolve, 100));
           retrieveAndProcessMetadata(isbn)
         } else {
           console.log(`DEBUG: ISBN NOT FOUND for ${filePath}`)
