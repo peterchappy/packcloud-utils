@@ -1,0 +1,1 @@
+export const metadataFileName = (sourcePathname: string) => `.${sourcePathname}.metadata.json`

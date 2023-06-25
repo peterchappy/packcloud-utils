@@ -51,11 +51,11 @@ export async function getIsbnFromEpub(filepath: string): Promise<string | undefi
       verboseLog('ERROR: MISSING DATA', metadata)
     }
 
-    log(`PROCESSING: Unable to find ISBN for ${filepath}`)
-    log(`PROCESSING: Looking up by`)
-    log(`PROCESSING: title - ${title}`)
-    log(`PROCESSING: author - ${author}`)
-    log(`PROCESSING: publisher - ${publisher}`)
+    log(`STATUS: Unable to find ISBN for ${filepath}`)
+    log(`STATUS: Looking up by`)
+    log(`STATUS: title - ${title}`)
+    log(`STATUS: author - ${author}`)
+    log(`STATUS: publisher - ${publisher}`)
 
     const isbn = await fetchGoogleBookISBN(title, author, publisher)
     

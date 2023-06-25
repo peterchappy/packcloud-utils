@@ -85,7 +85,7 @@ export const processFolder = (folderPath: string, isRoot = false) => {
       const filePath = path.join(folderPath, file);
 
       fs.stat(filePath, async (error, stats) => {
-        console.log(`PROCESSING: ${filePath}`)
+        console.log(`STATUS: ${filePath}`)
         if (error) {
           console.error(`Error getting stats for ${filePath}: ${error.message}`);
           return;

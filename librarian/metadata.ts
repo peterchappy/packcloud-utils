@@ -5,7 +5,7 @@ import { fetchGoogleBooksMetadata } from './services';
 import { getFolderToRunIn, isEpub, isPDF } from './utils';
 import { isDirectory } from './utils/files';
 import { getIsbnFromEpub } from './utils/epub';
-import { extractISBNFromPDF } from './utils/pdf';
+import { extractISBNFromPDF, isMagazine } from './utils/pdf';
 import { verboseLog } from './utils/logs';
 import * as R from 'ramda'
 import { log } from 'console';
@@ -71,7 +71,7 @@ export const retrieveAndProcessMetadata = async (isbn: string, backoffs = 0): Pr
 
     const backoffTime = BACKOFF_TIME_MULTIPLE * (backoffs + 1)
 
-    log(`PROCESSING: Attemtping again in ${backoffTime}ms. (Attempt ${backoffs})`);
+    log(`STATUS: Attemtping again in ${backoffTime}ms. (Attempt ${backoffs})`);
 
     await new Promise((resolve) => setTimeout(resolve, backoffTime));
 
@@ -95,7 +95,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
 
       for (const file of files) {
         const filePath = path.join(folderPath, file);
-        log(`PROCESSING: ${filePath}`);
+        log(`STATUS: ${filePath}`);
 
         try {
           const directory = await isDirectory(filePath);
@@ -108,8 +108,14 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
 
           let isbn = undefined;
 
-          if (isPDF(filePath)) {
+          if (isPDF(filePath) && !isMagazine) {
             isbn = await extractISBNFromPDF(filePath)
+          } 
+
+          if (isPDF(filePath)) {
+            // TODO - Just move to Magazines
+            log(`STATUS: Skipping file ${filePath} which is identified as a magazine.`);
+            continue;
           }
     
     
@@ -122,10 +128,10 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
             continue;
           }
 
-          log(`PROCESSING: ISBN found for ${filePath} - ${isbn}`);
+          log(`STATUS: ISBN found for ${filePath} - ${isbn}`);
           await new Promise((resolve) => setTimeout(resolve, 100));
 
-          log(`PROCESSING: Fetching metadata for ${filePath} - ${isbn}`)
+          log(`STATUS: Fetching metadata for ${filePath} - ${isbn}`)
           const metaData = await retrieveAndProcessMetadata(isbn)
 
           if (!metaData) {
@@ -134,11 +140,13 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
             continue;
           }
           
-          log(`PROCESSING: SUCCESS!!!`)
+          log(`STATUS: SUCCESS!!!`)
 
           const primaryCategory = metaData?.volumeInfo?.categories[0];
 
           if (!primaryCategory) {
+            log(`ERROR: No category found for ${filePath} - ${isbn}`)
+            log(metaData)
             continue
           }
 
@@ -154,9 +162,9 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
           console.log('------------')
         }
       }
+      
+      resolve(lookup);
     });
-
-    resolve(lookup);
   })
 }
 

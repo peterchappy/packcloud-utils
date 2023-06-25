@@ -2,9 +2,16 @@ import * as fs from 'fs';
 import { isFileExtension } from './files';
 import { formatISBN } from './books';
 import { verboseLog } from './logs';
+import { hasMonthInString } from './dates';
 const pdf = require('pdf-parse');
 
 export const isPDF = isFileExtension('.pdf')
+
+export const isMagazine = (pathname: string) => {
+  const lowercase = pathname.toLowerCase();
+
+  return lowercase.includes('vol') || hasMonthInString(pathname)
+}
 
 export async function extractISBNFromPDF(filePath: string): Promise<string | undefined> {
   try {
