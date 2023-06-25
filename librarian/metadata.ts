@@ -7,6 +7,8 @@ import { isDirectory } from './utils/files';
 import { getIsbnFromEpub } from './utils/epub';
 import { extractISBNFromPDF } from './utils/pdf';
 import { verboseLog } from './utils/logs';
+import * as R from 'ramda'
+import { log } from 'console';
 
 const pdf = require('pdf-parse');
 
@@ -55,65 +57,78 @@ export const retrieveAndProcessMetadata = async (isbn: string) => {
   }
 }
 
+type ProcessFolderReturn = Record<string, string[]>
 
-export const processFolder = (folderPath: string) => {
-  fs.readdir(folderPath, async (error, files) => {
-    if (error) {
-      console.error(`Error reading folder ${folderPath}: ${error.message}`);
-      return;
-    }
+export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> => {
 
-    const lookup = {}
+  return new Promise((resolve) => {
+    const lookup: ProcessFolderReturn = {}
 
-    for (const file of files) {
-      const filePath = path.join(folderPath, file);
-      try {
-        const directory = await isDirectory(filePath);
-  
-        if (directory) {
-          processFolder(filePath)
-        }
+    fs.readdir(folderPath, async (error, files) => {
 
-        let isbn = undefined;
-
-        if (isPDF(filePath)) {
-          isbn = await extractISBNFromPDF(filePath)
-        }
-  
-  
-        if (isEpub(filePath)) {
-          isbn = await getIsbnFromEpub(filePath);
-        } 
-
-        if (isbn) {
-          verboseLog(`ISBN FOUND FOR ${filePath}`)
-          verboseLog(`ISBN =`, isbn)
-          const metaData = await retrieveAndProcessMetadata(isbn)
-          const primaryCategory = metaData?.volumeInfo?.categories[0];
-
-          if (!primaryCategory) {
-            continue
-          }
-
-          if (lookup[primaryCategory]) {
-            lookup[primaryCategory].push(metaData.title)
-          } else {
-            lookup[primaryCategory] = [metaData.title]
-          }
-        } else {
-          verboseLog(`DEBUG: ISBN NOT FOUND for ${filePath}`)
-        }
-
-
-      } catch (e) {
-        console.log('ERROR: UNABEL TO HANDLE', filePath)
-        console.log(e)
-        console.log('------------')
+      if (error) {
+        console.error(`Error reading folder ${folderPath}: ${error.message}`);
+        resolve({});
       }
-    }
+
+      for (const file of files) {
+        const filePath = path.join(folderPath, file);
+        try {
+          const directory = await isDirectory(filePath);
     
-    console.log(lookup)
-  });
+          if (directory) {
+            const nestedLookup = processFolder(filePath)
+            R.mergeLeft(lookup, nestedLookup)
+            continue;
+          }
+
+          let isbn = undefined;
+
+          if (isPDF(filePath)) {
+            isbn = await extractISBNFromPDF(filePath)
+          }
+    
+    
+          if (isEpub(filePath)) {
+            isbn = await getIsbnFromEpub(filePath);
+          } 
+
+          if (isbn) {
+            verboseLog(`ISBN FOUND FOR ${filePath}`)
+            verboseLog(`ISBN =`, isbn)
+            const metaData = await retrieveAndProcessMetadata(isbn)
+
+            if (!metaData) {
+              log(`ERROR: Unable to retrieve metadata for ${filePath} with matched ISBN ${isbn}`)
+              log(`ERROR: Unable to retrieve metadata for ${filePath}`)
+            }
+            
+            const primaryCategory = metaData?.volumeInfo?.categories[0];
+
+            if (!primaryCategory) {
+              continue
+            }
+
+            if (lookup[primaryCategory]) {
+              lookup[primaryCategory].push(metaData.title)
+            } else {
+              lookup[primaryCategory] = [metaData.title]
+            }
+          } else {
+            verboseLog(`ERROR: ISBN NOT FOUND for ${filePath}`)
+          }
+
+
+        } catch (e) {
+          console.log('ERROR: UNABEL TO HANDLE', filePath)
+          console.log(e)
+          console.log('------------')
+        }
+      }
+    });
+
+    resolve(lookup);
+  })
 }
 
 const rootFolder = getFolderToRunIn()
