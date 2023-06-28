@@ -165,7 +165,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
           // TODO - Abstract
           const authors = bookInfo.metadata.authors?.join(', ')
           const ext = filePath.substring(filePath.lastIndexOf('.') + 1);
-          const pathFormattedTitle = bookInfo.metadata.title.replace(/ /g, "_");
+          const pathFormattedTitle = bookInfo.metadata.title
           const newFileName = `${authors} - ${pathFormattedTitle}.${ext}`
 
           const path = `${getFolderArg()}${primaryCategory}/${newFileName}`
