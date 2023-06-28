@@ -54,9 +54,9 @@ export const retrieveAndProcessMetadata = async (isbn: string, backoffs = 0): Pr
     //   }
     // });
     return metadata
-  } catch (error) {
+  } catch (error: any) {
 
-    if (error?.response?.status === undefined || error?.response?.status !== 429) {
+    if (error && error?.response && error?.response?.status === undefined || error?.response?.status !== 429) {
       log(`ERROR: retrieving metadata for ${isbn} -`, String(error));
       return Promise.resolve()
     }
@@ -168,6 +168,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
 const rootFolder = getFolderToRunIn()
 
 const main = async () => {
+  console.log(`ROOT FOLDER: ${rootFolder}`)
   if (rootFolder) {
     const lookup = await processFolder(rootFolder);
     console.log(lookup)
