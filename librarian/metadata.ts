@@ -163,10 +163,10 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
           }
 
           // TODO - Abstract
-          const authors = bookInfo.metadata.authors?.join('-and-').replace(/ /g, "_");
+          const authors = bookInfo.metadata.authors?.join(', ')
           const ext = filePath.substring(filePath.lastIndexOf('.') + 1);
           const pathFormattedTitle = bookInfo.metadata.title.replace(/ /g, "_");
-          const newFileName = `${authors}-${pathFormattedTitle}${ext}`
+          const newFileName = `${authors} - ${pathFormattedTitle}.${ext}`
 
           const path = `${getFolderArg()}${primaryCategory}/${newFileName}`
 
@@ -190,6 +190,7 @@ const main = async () => {
   if (rootFolder) {
     const lookup = await processFolder(rootFolder);
     console.log(lookup)
+    console.log(lookup.filter(x => x.includes('.pdf')))
   } else {
     console.error('Please provide a root folder as a command line argument.');
   }

@@ -112,5 +112,5 @@ export const findMatchingCategory = (categories: string[]):TOP_CATEGORIES => {
     return TOP_CATEGORIES.UNKNOWN
   }
 
-  return category 
+  return categoryLookup[category]
 } 
