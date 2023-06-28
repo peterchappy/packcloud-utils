@@ -2,14 +2,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as Tesseract from 'tesseract.js';
 import { fetchGoogleBooksMetadata } from './services';
-import {  isEpub, isPDF } from './utils';
-import { deleteFile, isAmazonBook, isDirectory, isImage, isMobi } from './utils/files';
-import { getIsbnFromEpub } from './utils/epub';
-import { extractISBNFromPDF, isMagazine } from './utils/pdf';
-import { log, verboseLog } from './utils/logs';
+import { isEpub, isPDF } from './utils';
 import { findMatchingCategory } from './utils/categories';
 import { getFolderArg } from './utils/commandline';
-import { ifElse } from 'ramda';
+import { getIsbnFromEpub } from './utils/epub';
+import { deleteFile, isAmazonBook, isDirectory, isImage, isMobi } from './utils/files';
+import { log, verboseLog } from './utils/logs';
+import { extractISBNFromPDF, isMagazine } from './utils/pdf';
+import { BookType, VolumeInfo } from './types';
 
 require('dotenv').config()
 
@@ -41,31 +41,22 @@ export const fetchISBNFromText = async (text: string): Promise<string> => {
 const BACKOFF_TIME_MULTIPLE = 200
 const AMOUNT_OF_BACKOFFS = 10
 
-export const retrieveAndProcessMetadata = async (isbn: string, backoffs = 0): Promise<any> => {
+export const retrieveAndProcessMetadata = async (isbn: string, backoffs = 0): Promise<VolumeInfo> => {
   try {
     const metadata = await fetchGoogleBooksMetadata(isbn);
-    // Write the metadata to a file
-    // const metadataFilePath = `${filePath}.metadata.json`;
-    // fs.writeFile(metadataFilePath, JSON.stringify(metadata), (error) => {
-    //   if (error) {
-    //     console.error(`Error writing metadata for ${filePath}:`, error);
-    //   } else {
-    //     console.log(`Metadata for ${filePath} has been written to ${metadataFilePath}`);
-    //   }
-    // });
     return metadata
   } catch (error: any) {
 
     if (error && error?.response && error?.response?.status === undefined || error?.response?.status !== 429) {
       log(`ERROR: retrieving metadata for ${isbn} -`, String(error));
-      return Promise.resolve()
+      return Promise.reject()
     }
 
     log(`ERROR: Rate Limited while fetching ${isbn}`);
 
     if (backoffs > AMOUNT_OF_BACKOFFS) {
       log(`ERROR: Backoff count of ${AMOUNT_OF_BACKOFFS} reached`);
-      return Promise.resolve()
+      return Promise.reject()
     }
 
     const backoffTime = BACKOFF_TIME_MULTIPLE * (backoffs + 1)
@@ -144,27 +135,40 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
           await new Promise((resolve) => setTimeout(resolve, 100));
 
           log(`STATUS: Fetching metadata for ${filePath} - ${isbn}`)
-          const metaData = await retrieveAndProcessMetadata(isbn)
+          const metadata = await retrieveAndProcessMetadata(isbn)
 
-          if (!metaData) {
+          if (!metadata) {
             log(`ERROR: Unable to retrieve metadata for ${filePath} with matched ISBN ${isbn}`)
             log(`ERROR: Unable to retrieve metadata for ${filePath}`)
             continue;
           }
+
+          const bookInfo: BookType = {
+            isbn,
+            metadata,
+            filename: file,
+            pathname: filePath,
+          }
           
           log(`STATUS: SUCCESS!!!`)
 
-          const categories: string[] = metaData?.volumeInfo?.categories ?? []
+          const categories: string[] = metadata?.categories ?? []
           const primaryCategory = findMatchingCategory(categories);
 
           // TODO should never be the case
           if (!primaryCategory) {
             log(`ERROR: No category found for ${filePath} - ${isbn}`)
-            log(metaData)
+            log(metadata)
             continue
           }
 
-          const path = `${getFolderArg()}${primaryCategory}/${file}`
+          // TODO - Abstract
+          const authors = bookInfo.metadata.authors?.join('-and-').replace(/ /g, "_");
+          const ext = filePath.substring(filePath.lastIndexOf('.') + 1);
+          const pathFormattedTitle = bookInfo.metadata.title.replace(/ /g, "_");
+          const newFileName = `${authors}-${pathFormattedTitle}${ext}`
+
+          const path = `${getFolderArg()}${primaryCategory}/${newFileName}`
 
           lookup.push(path)
         } catch (e) {

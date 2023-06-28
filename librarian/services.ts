@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { VolumeInfo } from './types';
 
 export async function fetchGoogleBookISBN(title: string, author: string, publisher?: string): Promise<string | undefined> {
   let query = `https://www.googleapis.com/books/v1/volumes?q=intitle:${title}+inauthor:${author}`;
@@ -33,7 +34,7 @@ export async function fetchGoogleBookISBN(title: string, author: string, publish
   }
 }
 
-export const fetchGoogleBooksMetadata = async (isbn: string) => {
+export const fetchGoogleBooksMetadata = async (isbn: string): Promise<VolumeInfo> => {
   const url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`;
 
   const response = await axios.get(url);
@@ -41,8 +42,7 @@ export const fetchGoogleBooksMetadata = async (isbn: string) => {
 
   if (data && data.items && data.items.length > 0) {
     const book = data.items[0];
-    const { title, authors, description } = book.volumeInfo;
-    return { title, authors, description, ...book };
+    return book.volumeInfo;
   }
 
   throw new Error(`No metadata found for ISBN ${isbn}`);

@@ -5,14 +5,25 @@ export type OtherFileExtensionKinds = ".jpeg" | '.jpg'
 
 export type FileExtensionKind = EbookExtensionKind | ComicExtensionKind | AudiobookExtensionKind | OtherFileExtensionKinds
 
+export type VolumeInfo = {
+  title: string;
+  subtitle?: string;
+  authors?: string[];
+  publisher?: string;
+  publishedDate?: string;
+  description?: string;
+  pageCount?: number;
+  categories?: string[];
+  averageRating?: number;
+  ratingsCount?: number;
+  previewLink?: string;
+  infoLink?: string;
+  canonicalVolumeLink?: string;
+}
+
 export type BookType = {
   filename: string;
   pathname: string;
   isbn: string;
-  metadata: {
-    authors: string[];
-    title: string;
-    publisher: string;
-    categories: string[]
-  }
+  metadata: VolumeInfo
 }
