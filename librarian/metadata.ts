@@ -9,8 +9,7 @@ import { extractISBNFromPDF, isMagazine } from './utils/pdf';
 import { verboseLog } from './utils/logs';
 import * as R from 'ramda'
 import { log } from 'console';
-
-const pdf = require('pdf-parse');
+import { findMatchingCategory } from './utils/categories';
 
 require('dotenv').config()
 
@@ -39,8 +38,8 @@ export const fetchISBNFromText = async (text: string): Promise<string> => {
   }
 }
 
-const BACKOFF_TIME_MULTIPLE = 250
-const AMOUNT_OF_BACKOFFS = 5
+const BACKOFF_TIME_MULTIPLE = 200
+const AMOUNT_OF_BACKOFFS = 10
 
 export const retrieveAndProcessMetadata = async (isbn: string, backoffs = 0): Promise<any> => {
   try {
@@ -79,18 +78,18 @@ export const retrieveAndProcessMetadata = async (isbn: string, backoffs = 0): Pr
   }
 }
 
-type ProcessFolderReturn = Record<string, string[]>
+type ProcessFolderReturn = string[]
 
 export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> => {
 
   return new Promise((resolve) => {
-    const lookup: ProcessFolderReturn = {}
+    const lookup: ProcessFolderReturn = []
 
     fs.readdir(folderPath, async (error, files) => {
 
       if (error) {
         console.error(`Error reading folder ${folderPath}: ${error.message}`);
-        resolve({});
+        resolve([]);
       }
 
       for (const file of files) {
@@ -102,7 +101,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
     
           if (directory) {
             const nestedLookup = await processFolder(filePath)
-            R.mergeLeft(lookup, nestedLookup)
+            lookup.concat(nestedLookup)
             continue;
           }
 
@@ -117,7 +116,6 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
             log(`STATUS: Skipping file ${filePath} which is identified as a magazine.`);
             continue;
           }
-    
     
           if (isEpub(filePath)) {
             isbn = await getIsbnFromEpub(filePath);
@@ -142,22 +140,21 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
           
           log(`STATUS: SUCCESS!!!`)
 
-          const primaryCategory = metaData?.volumeInfo?.categories[0];
+          const categories: string[] = metaData?.volumeInfo?.categories ?? []
+          const primaryCategory = findMatchingCategory(categories);
 
+          // TODO should never be the case
           if (!primaryCategory) {
             log(`ERROR: No category found for ${filePath} - ${isbn}`)
             log(metaData)
             continue
           }
 
-          if (lookup[primaryCategory]) {
-            lookup[primaryCategory].push(metaData.title)
-          } else {
-            lookup[primaryCategory] = [metaData.title]
-          }
-          
+          const path = `${getFolderToRunIn()}/${primaryCategory}/${file}`
+
+          lookup.push(path)
         } catch (e) {
-          console.log('ERROR: UNABEL TO HANDLE', filePath)
+          console.log('ERROR: UNABLE TO HANDLE', filePath)
           console.log(e)
           console.log('------------')
         }
