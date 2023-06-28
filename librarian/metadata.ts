@@ -9,6 +9,7 @@ import { extractISBNFromPDF, isMagazine } from './utils/pdf';
 import { log, verboseLog } from './utils/logs';
 import { findMatchingCategory } from './utils/categories';
 import { getFolderArg } from './utils/commandline';
+import { ifElse } from 'ramda';
 
 require('dotenv').config()
 
@@ -120,15 +121,15 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
             }
           }
 
-          if (isPDF(filePath) && !isMagazine(filePath)) {
-            isbn = await extractISBNFromPDF(filePath)
-          } 
-
-          if (isPDF(filePath)) {
+          if (isPDF(filePath) && isMagazine(filePath)) {
             // TODO - Just move to Magazines
             log(`STATUS: Skipping file ${filePath} which is identified as a magazine.`);
             continue;
           }
+
+          if (isPDF(filePath) && !isMagazine(filePath)) {
+            isbn = await extractISBNFromPDF(filePath)
+          } 
     
           if (isEpub(filePath)) {
             isbn = await getIsbnFromEpub(filePath);
