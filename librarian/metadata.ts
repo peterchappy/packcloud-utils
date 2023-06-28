@@ -2,14 +2,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as Tesseract from 'tesseract.js';
 import { fetchGoogleBooksMetadata } from './services';
-import { getFolderToRunIn, isEpub, isPDF } from './utils';
-import { isDirectory } from './utils/files';
+import {  isEpub, isPDF } from './utils';
+import { deleteFile, isAmazonBook, isDirectory, isImage, isMobi } from './utils/files';
 import { getIsbnFromEpub } from './utils/epub';
 import { extractISBNFromPDF, isMagazine } from './utils/pdf';
-import { verboseLog } from './utils/logs';
-import * as R from 'ramda'
-import { log } from 'console';
+import { log, verboseLog } from './utils/logs';
 import { findMatchingCategory } from './utils/categories';
+import { getFolderArg } from './utils/commandline';
 
 require('dotenv').config()
 
@@ -107,6 +106,20 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
 
           let isbn = undefined;
 
+          // TODO - We don't nec want to delete these. This should be a config long term
+          // Right now for my purposes I don't care about them when getting metadata
+          // Since I'm unable to easily parse them for ISBN
+          // OR in the case of an image it's not an ebook :shrug:
+          if (isMobi(filePath) || isImage(filePath) || isAmazonBook(filePath)) {
+            try {
+              await deleteFile(filePath)
+            } catch (e) {
+              log(`ERROR: Failed to delete ${filePath}`)
+            } finally {
+              continue
+            }
+          }
+
           if (isPDF(filePath) && !isMagazine(filePath)) {
             isbn = await extractISBNFromPDF(filePath)
           } 
@@ -150,7 +163,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
             continue
           }
 
-          const path = `${getFolderToRunIn()}/${primaryCategory}/${file}`
+          const path = `${getFolderArg()}${primaryCategory}/${file}`
 
           lookup.push(path)
         } catch (e) {
@@ -165,7 +178,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
   })
 }
 
-const rootFolder = getFolderToRunIn()
+const rootFolder = getFolderArg()
 
 const main = async () => {
   console.log(`ROOT FOLDER: ${rootFolder}`)

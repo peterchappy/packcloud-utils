@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@cyber2024/pdf-parse-fixed": "^1.2.5",
+    "@types/adm-zip": "^0.5.0",
     "@types/ramda": "^0.29.2",
     "adm-zip": "^0.5.10",
     "axios": "^1.4.0",

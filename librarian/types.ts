@@ -1,8 +1,9 @@
 export type AudiobookExtensionKind = '.mp4' | '.mp3' | '.m4b'
 export type ComicExtensionKind = '.cbz' | '.cbr'
-export type EbookExtensionKind = '.mobi' | '.epub' | ".pdf"
+export type EbookExtensionKind = '.mobi' | '.epub' | ".pdf" | '.azw' | '.azw3'
+export type OtherFileExtensionKinds = ".jpeg" | '.jpg'
 
-export type FileExtensionKind = EbookExtensionKind | ComicExtensionKind | AudiobookExtensionKind
+export type FileExtensionKind = EbookExtensionKind | ComicExtensionKind | AudiobookExtensionKind | OtherFileExtensionKinds
 
 export type BookType = {
   filename: string;
