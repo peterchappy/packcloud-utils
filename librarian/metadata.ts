@@ -201,7 +201,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
         }
       }
 
-      resolve();
+      resolve(true);
     });
   })
 }
@@ -212,8 +212,6 @@ const main = async () => {
   console.log(`ROOT FOLDER: ${rootFolder}`)
   if (rootFolder) {
     const lookup = await processFolder(rootFolder);
-    console.log(lookup)
-    console.log(lookup.filter(x => x.includes('.pdf')))
   } else {
     console.error('Please provide a root folder as a command line argument.');
   }
