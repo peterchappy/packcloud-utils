@@ -5,7 +5,6 @@ import { getFolderToRunIn } from './utils';
 
 require('dotenv').config();
 
-
 export async function moveFileToFolder(filePath: string, folderPath: string) {
   const normalizedFilePath = filePath.replace(/\s/g, "_");
   const fileBasename = path.basename(normalizedFilePath);
