@@ -86,6 +86,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
       }
 
       for (const file of files) {
+        log('------------')
         const filePath = path.join(folderPath, file);
         log(`STATUS: ${filePath}`);
 
@@ -193,11 +194,9 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
 
           log(`STATUS: metadata written`)
           log(`STATUS: ${bookInfo.filename} sorted`)
-          log('------------')
         } catch (e) {
           log('ERROR: UNABLE TO HANDLE', filePath)
           log(e)
-          log('------------')
         }
       }
 
