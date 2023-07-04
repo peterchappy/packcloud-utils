@@ -135,12 +135,6 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
           log(`STATUS: Fetching metadata for ${filePath} - ${isbn}`)
           const metadata = isbn ? await retrieveAndProcessMetadata(isbn) : undefined
 
-          if (!metadata) {
-            log(`ERROR: Unable to retrieve metadata for ${filePath} with matched ISBN ${isbn}`)
-            log(`ERROR: Unable to retrieve metadata for ${filePath}`)
-            continue;
-          }
-
           const commonBookType: BasicBookInfo = {
             filename: file,
             pathname: filePath,
