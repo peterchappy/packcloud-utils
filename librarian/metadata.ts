@@ -179,7 +179,8 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
             newPathname = `${getFolderArg()}${primaryCategory}/${bookInfo.filename}`
           }
 
-          log(`STATUS: organizing ${bookInfo.filename} to ${primaryCategory}`)
+          log(`STATUS: organizing ${bookInfo.filename} to category ${primaryCategory}`)
+          verboseLog(`STATUS: organizing ${bookInfo.filename} to ${newPathname}`)
           
           await moveFile(bookInfo.pathname, newPathname);
 
