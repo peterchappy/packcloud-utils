@@ -1,6 +1,6 @@
 import { log } from './logs';
 
-enum TOP_CATEGORIES {
+export enum TOP_CATEGORIES {
   ART = "Art",
   BUSINESS = "Business",
   CRAFTS = 'Crafts',
@@ -114,3 +114,8 @@ export const findMatchingCategory = (categories: string[]):TOP_CATEGORIES => {
 
   return categoryLookup[category]
 } 
+
+export const isTopCategory = (value: string): value is TOP_CATEGORIES => {
+  return Object.values(TOP_CATEGORIES).includes(value as TOP_CATEGORIES);
+}
+

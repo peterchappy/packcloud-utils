@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as Tesseract from 'tesseract.js';
 import { fetchGoogleBooksMetadata } from './services';
 import { isEpub, isPDF } from './utils';
-import { findMatchingCategory } from './utils/categories';
+import { TOP_CATEGORIES, findMatchingCategory, isTopCategory } from './utils/categories';
 import { getFolderArg } from './utils/commandline';
 import { getIsbnFromEpub } from './utils/epub';
 import { deleteFile, isAmazonBook, isDirectory, isImage, isMobi, moveFile } from './utils/files';
@@ -11,7 +11,7 @@ import { log, verboseLog } from './utils/logs';
 import { extractISBNFromPDF, isMagazine } from './utils/pdf';
 import { BasicBookInfo, BookType, VolumeInfo } from './types';
 import { writeBookMetaData } from './utils/metadata';
-import { writeDirectoryIfNotExits } from './utils/folders';
+import { deleteFolder, writeDirectoryIfNotExits } from './utils/folders';
 
 require('dotenv').config()
 
@@ -71,18 +71,17 @@ export const retrieveAndProcessMetadata = async (isbn: string, backoffs = 0): Pr
   }
 }
 
-type ProcessFolderReturn = string[]
+type ProcessFolderReturn = boolean
 
 export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> => {
 
   return new Promise((resolve) => {
-    const lookup: ProcessFolderReturn = []
 
     fs.readdir(folderPath, async (error, files) => {
 
       if (error) {
         console.error(`Error reading folder ${folderPath}: ${error.message}`);
-        resolve([]);
+        resolve(false);
       }
 
       for (const file of files) {
@@ -93,9 +92,17 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
         try {
           const directory = await isDirectory(filePath);
     
+          // SKIP TOP CATEGORIES
+          if (directory && isTopCategory(filePath)) {
+            log(`STATUS: SKIPPING FOLDER ${filePath}`)
+            continue
+          }
+
           if (directory) {
-            const nestedLookup = await processFolder(filePath)
-            lookup.concat(nestedLookup)
+            log(`STATUS: PROCESSING FOLDER ${filePath}`)
+            await processFolder(filePath)
+            log(`STATUS: DELETING FOLDER ${filePath}`)
+            await deleteFolder(filePath)
             continue;
           }
 
@@ -194,7 +201,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
         }
       }
 
-      resolve(lookup);
+      resolve();
     });
   })
 }
