@@ -6,10 +6,11 @@ import { isEpub, isPDF } from './utils';
 import { findMatchingCategory } from './utils/categories';
 import { getFolderArg } from './utils/commandline';
 import { getIsbnFromEpub } from './utils/epub';
-import { deleteFile, isAmazonBook, isDirectory, isImage, isMobi } from './utils/files';
+import { deleteFile, isAmazonBook, isDirectory, isImage, isMobi, moveFile } from './utils/files';
 import { log, verboseLog } from './utils/logs';
 import { extractISBNFromPDF, isMagazine } from './utils/pdf';
-import { BookType, VolumeInfo } from './types';
+import { BasicBookInfo, BookType, VolumeInfo } from './types';
+import { writeBookMetaData } from './utils/metadata';
 
 require('dotenv').config()
 
@@ -96,7 +97,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
             continue;
           }
 
-          let isbn = undefined;
+          let isbn: string | undefined = undefined;
 
           // TODO - We don't nec want to delete these. This should be a config long term
           // Right now for my purposes I don't care about them when getting metadata
@@ -126,16 +127,11 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
             isbn = await getIsbnFromEpub(filePath);
           } 
 
-          if (!isbn) {
-            verboseLog(`ERROR: ISBN NOT FOUND for ${filePath}`)
-            continue;
-          }
-
           log(`STATUS: ISBN found for ${filePath} - ${isbn}`);
           await new Promise((resolve) => setTimeout(resolve, 100));
 
           log(`STATUS: Fetching metadata for ${filePath} - ${isbn}`)
-          const metadata = await retrieveAndProcessMetadata(isbn)
+          const metadata = isbn ? await retrieveAndProcessMetadata(isbn) : undefined
 
           if (!metadata) {
             log(`ERROR: Unable to retrieve metadata for ${filePath} with matched ISBN ${isbn}`)
@@ -143,15 +139,22 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
             continue;
           }
 
-          const bookInfo: BookType = {
-            isbn,
-            metadata,
+          const commonBookType: BasicBookInfo = {
             filename: file,
             pathname: filePath,
           }
-          
-          log(`STATUS: SUCCESS!!!`)
 
+          const bookInfo: BookType = metadata && isbn ? {
+            type: 'matched',
+            isbn,
+            metadata,
+            ...commonBookType
+          } : {
+            type: 'unmatched',
+            isbn,
+            ...commonBookType,
+          }
+          
           const categories: string[] = metadata?.categories ?? []
           const primaryCategory = findMatchingCategory(categories);
 
@@ -162,15 +165,31 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
             continue
           }
 
-          // TODO - Abstract
-          const authors = bookInfo.metadata.authors?.join(', ')
-          const ext = filePath.substring(filePath.lastIndexOf('.') + 1);
-          const pathFormattedTitle = bookInfo.metadata.title
-          const newFileName = `${authors} - ${pathFormattedTitle}.${ext}`
+          let newPathname = bookInfo.pathname
 
-          const path = `${getFolderArg()}${primaryCategory}/${newFileName}`
+          if (bookInfo.type === 'matched') {
+            // TODO - Abstract
+            const authors = bookInfo.metadata.authors?.join(', ')
+            const ext = filePath.substring(filePath.lastIndexOf('.') + 1);
+            const pathFormattedTitle = bookInfo.metadata.title
+            const newFileName = `${authors} - ${pathFormattedTitle}.${ext}`
 
-          lookup.push(path)
+            newPathname = `${getFolderArg()}${primaryCategory}/${newFileName}`
+          } else {
+            newPathname = `${getFolderArg()}${primaryCategory}/${bookInfo.filename}`
+          }
+
+          log(`STATUS: organizing ${bookInfo.filename} to ${primaryCategory}`)
+          
+          await moveFile(bookInfo.pathname, newPathname);
+
+          log(`STATUS: ${bookInfo.filename} organized`)
+          log(`STATUS: writing metadata for ${bookInfo.filename}`)
+
+          await writeBookMetaData({ ...bookInfo, pathname: newPathname })
+
+          log(`STATUS: metadata written`)
+          log(`STATUS: ${bookInfo.filename} sorted`)
         } catch (e) {
           console.log('ERROR: UNABLE TO HANDLE', filePath)
           console.log(e)

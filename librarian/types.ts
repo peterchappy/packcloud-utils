@@ -21,9 +21,20 @@ export type VolumeInfo = {
   canonicalVolumeLink?: string;
 }
 
-export type BookType = {
+export type BasicBookInfo = {
   filename: string;
   pathname: string;
+}
+
+export type KnownBookType = BasicBookInfo & {
+  type: 'matched'
   isbn: string;
   metadata: VolumeInfo
 }
+
+export type UnknownBookType = BasicBookInfo & {
+  type: 'unmatched'
+  isbn?: string;
+}
+
+export type BookType = UnknownBookType | KnownBookType
