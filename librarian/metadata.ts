@@ -190,10 +190,11 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
 
           log(`STATUS: metadata written`)
           log(`STATUS: ${bookInfo.filename} sorted`)
+          log('------------')
         } catch (e) {
-          console.log('ERROR: UNABLE TO HANDLE', filePath)
-          console.log(e)
-          console.log('------------')
+          log('ERROR: UNABLE TO HANDLE', filePath)
+          log(e)
+          log('------------')
         }
       }
 
