@@ -11,6 +11,7 @@ import { log, verboseLog } from './utils/logs';
 import { extractISBNFromPDF, isMagazine } from './utils/pdf';
 import { BasicBookInfo, BookType, VolumeInfo } from './types';
 import { writeBookMetaData } from './utils/metadata';
+import { writeDirectoryIfNotExits } from './utils/folders';
 
 require('dotenv').config()
 
@@ -166,6 +167,7 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
           }
 
           let newPathname = bookInfo.pathname
+          const categoryDirectory = `${getFolderArg()}${primaryCategory}`
 
           if (bookInfo.type === 'matched') {
             // TODO - Abstract
@@ -174,14 +176,14 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
             const pathFormattedTitle = bookInfo.metadata.title
             const newFileName = `${authors} - ${pathFormattedTitle}.${ext}`
 
-            newPathname = `${getFolderArg()}${primaryCategory}/${newFileName}`
+            newPathname = `${categoryDirectory}/${newFileName}`
           } else {
-            newPathname = `${getFolderArg()}${primaryCategory}/${bookInfo.filename}`
+            newPathname = `${categoryDirectory}/${bookInfo.filename}`
           }
 
           log(`STATUS: organizing ${bookInfo.filename} to category ${primaryCategory}`)
           log(`STATUS: organizing ${bookInfo.filename} to ${newPathname}`)
-          
+          await writeDirectoryIfNotExits(categoryDirectory);
           await moveFile(bookInfo.pathname, newPathname);
 
           log(`STATUS: ${bookInfo.filename} organized`)
