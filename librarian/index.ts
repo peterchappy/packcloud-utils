@@ -74,7 +74,7 @@ export const processFolder = (folderPath: string, isRoot = false) => {
         if (error) {
           console.error(`Error moving folder ${folderPath}: ${error.message}`);
         } else {
-          console.log(`Moved ${folderPath} to ${path.join(audiobooksFolder, path.basename(folderPath))}`);
+          console.log(`Moved ${folderPath} to ${path.join(audiobooksFolder ?? '', path.basename(folderPath))}`);
         }
       });
       
