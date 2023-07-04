@@ -93,7 +93,12 @@ export const processFolder = (folderPath: string): Promise<ProcessFolderReturn> 
           const directory = await isDirectory(filePath);
     
           // SKIP TOP CATEGORIES
-          if (directory && isTopCategory(filePath)) {
+          if (directory && isTopCategory(file)) {
+            // MAKING IT CLEAR IN MY LOGS
+            log(`STATUS: SKIPPING FOLDER ${filePath}`)
+            log(`STATUS: SKIPPING FOLDER ${filePath}`)
+            log(`STATUS: SKIPPING FOLDER ${filePath}`)
+            log(`STATUS: SKIPPING FOLDER ${filePath}`)
             log(`STATUS: SKIPPING FOLDER ${filePath}`)
             continue
           }
